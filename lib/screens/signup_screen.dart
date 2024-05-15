@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:login_signup/screens/signin_screen.dart';
-import 'package:login_signup/theme/theme.dart';
-import 'package:login_signup/widgets/custom_scaffold.dart';
+
+import 'package:virtualfundi/screens/signin_screen.dart';
+import 'package:virtualfundi/theme/theme.dart';
+import 'package:virtualfundi/widgets/custom_scaffold.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});

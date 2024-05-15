@@ -14,26 +14,23 @@ class SessionDetailsPage extends StatelessWidget {
       body: CustomScaffold(
         child: Column(
           children: [
-            const Expanded(
+            Expanded(
               flex: 1,
               child: SizedBox(height: 10),
             ),
             Expanded(
               flex: 7,
               child: Container(
-                padding: const EdgeInsets.fromLTRB(25.0, 20.0, 25.0, 20.0),
-                decoration: const BoxDecoration(
+                padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
+                decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40.0),
-                    topRight: Radius.circular(40.0),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(40.0)),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 20.0),
+                      SizedBox(height: 20.0),
                       Text(
                         'Session Name: $sessionName',
                         style: TextStyle(
@@ -42,8 +39,7 @@ class SessionDetailsPage extends StatelessWidget {
                           color: lightColorScheme.primary,
                         ),
                       ),
-                      const SizedBox(height: 20.0),
-                      // DataTable
+                      SizedBox(height: 20.0),
                       DataTable(
                         columns: [
                           DataColumn(label: Text('')),
@@ -69,7 +65,7 @@ class SessionDetailsPage extends StatelessWidget {
                           ]),
                         ],
                       ),
-                      const SizedBox(height: 20.0),
+                      SizedBox(height: 20.0),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.push(
@@ -79,7 +75,7 @@ class SessionDetailsPage extends StatelessWidget {
                         },
                         child: Text('Next'),
                       ),
-                      const SizedBox(height: 20.0),
+                      SizedBox(height: 20.0),
                     ],
                   ),
                 ),

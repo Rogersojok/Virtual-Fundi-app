@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:login_signup/screens/signin_screen.dart';
-import 'package:login_signup/screens/signup_screen.dart';
-import 'package:login_signup/theme/theme.dart';
-import 'package:login_signup/widgets/custom_scaffold.dart';
-import 'package:login_signup/widgets/welcome_button.dart';
+
+import 'package:virtualfundi/screens/signin_screen.dart';
+import 'package:virtualfundi/screens/signup_screen.dart';
+import 'package:virtualfundi/theme/theme.dart';
+import 'package:virtualfundi/widgets/custom_scaffold.dart';
+import 'package:virtualfundi/widgets/welcome_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({Key? key});

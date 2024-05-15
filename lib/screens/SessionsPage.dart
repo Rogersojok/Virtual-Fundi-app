@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:login_signup/screens/signup_screen.dart';
+//import 'package:login_signup/screens/signup_screen.dart';
+import 'package:virtualfundi/screens/signup_screen.dart';
 import '../theme/theme.dart';
 import '../widgets/custom_scaffold.dart';
 import 'session_details_page.dart'; // Import the session details page
