@@ -1,20 +1,115 @@
 import 'package:flutter/material.dart';
-//import 'package:login_signup/screens/signup_screen.dart';
 import 'package:virtualfundi/screens/signup_screen.dart';
 import '../theme/theme.dart';
 import '../widgets/custom_scaffold.dart';
 import 'session_details_page.dart'; // Import the session details page
+import 'dart:convert'; // for convert response to json
+import 'package:http/http.dart' as http; // Import http package for making api request.
+import '../database/database.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
-class SessionsPage extends StatelessWidget {
+
+class SessionsPage extends StatefulWidget {
   final String topic;
+  final int topicId;
 
-  SessionsPage({required this.topic, required String action});
+
+  SessionsPage({required this.topic, required this.topicId});
+
+  @override
+  _SessionsPageState createState() => _SessionsPageState();
+}
+
+class _SessionsPageState extends State<SessionsPage> {
+  List<Map<String, dynamic>> sessions = [];
+  late final Connectivity _connectivity;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _connectivity = Connectivity();
+    //_checkInternetAndFetchData();
+    fetchData();
+    fetchLocalData();
+  }
+
+  /*
+  Future<void> _checkInternetAndFetchData() async {
+    var connectivityResult = await _connectivity.checkConnectivity();
+    if (connectivityResult.contains(ConnectivityResult.mobile) || connectivityResult.contains(ConnectivityResult.wifi)) {
+      fetchData();
+      print("-------------------------- internet -------------");
+    } else {
+      fetchLocalData();
+      print("--------------------------no internet -------------");
+    }
+  }
+
+   */
+
+  Future<void> fetchData() async {
+
+    final dbHelper = DatabaseHelper();
+    await dbHelper.initializeDatabase();
+
+    final response = await http.get(Uri.parse('http://161.97.81.168:8080/viewSessions/${widget.topicId}'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+
+      // Convert JSON data to Session objects and insert into the database
+      for (var jsonData in data) {
+        final session = Session(
+          id: jsonData['id'],
+          sessionName: jsonData['sessionName'],
+          topic: jsonData['topic'],
+          duration: jsonData['duration'],
+          learningObjective: jsonData['learningObjective'],
+          fundibotsResources: jsonData['fundibotsResources'],
+          schoolResources: jsonData['schoolResources'],
+          dateCreated: DateTime.parse(jsonData['dateCreated']),
+        );
+        await dbHelper.insertSession(session);
+      }
+
+      // Retrieve all topics from the database and print them
+      final sessionsData = await dbHelper.retrieveAllSession(widget.topicId);
+      //print(sessionsData);
+
+      setState(() {
+        sessions = sessionsData.map((session) => session.toMap()).toList();
+        //print(sessions);
+        print("------------------session page------------------------------");
+
+      });
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
+
+  Future<void> fetchLocalData() async {
+
+    final dbHelper = DatabaseHelper();
+    await dbHelper.initializeDatabase();
+
+
+    // Retrieve all sessions under a topic from the database and print them
+    final sessionsData = await dbHelper.retrieveAllSession(widget.topicId);
+    //print(sessionsData);
+
+    setState(() {
+      sessions = sessionsData.map((session) => session.toMap()).toList();
+      //print(sessions);
+      print("------------------session page------------------------------");
+
+    });
+
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    // Dummy list of sessions for demonstration
-    List<String> sessions = ['Session 1', 'Session 2', 'Session 3'];
-
     return Scaffold(
       body: CustomScaffold(
         child: Column(
@@ -37,7 +132,7 @@ class SessionsPage extends StatelessWidget {
                     children: [
                       SizedBox(height: 20.0),
                       Text(
-                        topic,
+                        widget.topic,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -59,7 +154,7 @@ class SessionsPage extends StatelessWidget {
                                 .map(
                                   (session) => DataRow(
                                 cells: [
-                                  DataCell(SizedBox(width: 200, child: Text(session, textAlign: TextAlign.center))),
+                                  DataCell(SizedBox(width: 200, child: Text(session['sessionName'], textAlign: TextAlign.center))),
                                   DataCell(Container(
                                     width: 120, // Set a fixed width for the button
                                     child: ElevatedButton(
@@ -67,7 +162,10 @@ class SessionsPage extends StatelessWidget {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => SessionDetailsPage(sessionName: session),
+                                            builder: (context) => SessionDetailsPage(
+                                                sessionName: session['sessionName']!,
+                                                sessionId:session['id']!
+                                            ),
                                           ),
                                         );
                                       },

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_scaffold.dart';
+import 'package:http/http.dart' as http; // Import http package
+import 'dart:convert';
 import 'SessionsPage.dart';
 import 'signin_screen.dart'; // Import SignInScreen
 import 'signup_screen.dart';
 import '../theme/theme.dart';
+import '../database/database.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+//import 'package:login_signup/utils/internet.dart';
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,17 +20,96 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController _commentController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  List<Map<String, String>> scienceTopics = [
-    {'topic': 'Teeth', 'class': 'Class 1', 'term': 'Term 1'},
-    {'topic': 'Digestion', 'class': 'Class 2', 'term': 'Term 1'},
-  ];
-
-  List<Map<String, String>> filteredTopics = [];
+  List<Map<String, dynamic>> scienceTopics = [];
+  List<Map<String, dynamic>> filteredTopics = [];
+  //late final Connectivity _connectivity;
+  final Connectivity _connectivity = Connectivity();
 
   @override
   void initState() {
     super.initState();
-    filteredTopics = List.from(scienceTopics);
+    //_connectivity = Connectivity();
+    _connectivity.onConnectivityChanged;
+    // _checkInternetAndFetchData();
+    fetchData();
+    fetchLocalData();
+  }
+
+  /*
+  Future<void> _checkInternetAndFetchData() async {
+    var connectivityResult = await _connectivity.checkConnectivity();
+    print(connectivityResult);
+    if (connectivityResult.contains(ConnectivityResult.mobile) || connectivityResult.contains(ConnectivityResult.wifi)) {
+      fetchData();
+      print("-------------------------- internet -------------");
+    } else if(connectivityResult.contains(ConnectivityResult.none)) {
+      fetchLocalData();
+      print("--------------------------no internet -------------");
+    }
+  }
+
+   */
+
+
+  Future<void> fetchData() async {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.initializeDatabase();
+
+    final response = await http.get(Uri.parse('http://161.97.81.168:8080/'));
+
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+
+      // Convert JSON data to Topic objects and insert into the database
+      for (var jsonData in data) {
+        final topic = Topic(
+          id: jsonData['id'],
+          topicName: jsonData['topicName'],
+          topicCode: jsonData['topicCode'],
+          term: jsonData['term'],
+          cat: jsonData['cat'],
+          subject: jsonData['subject'],
+          classTaught: jsonData['classTaught'],
+          dateCreated: DateTime.parse(jsonData['dateCreated']),
+        );
+        await dbHelper.insertTopic(topic);
+      }
+
+      // Retrieve all topics from the database and print them
+      final topics = await dbHelper.retrieveAllTopics();
+
+
+      // Update the state with the retrieved topics
+      setState(() {
+        // Convert the list of Topic objects to a list of maps
+        scienceTopics = topics.map((topic) => topic.toMap()).toList();
+        filteredTopics = List.from(scienceTopics);
+        print(filteredTopics);
+      });
+
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
+
+  Future<void> fetchLocalData() async {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.initializeDatabase();
+
+
+
+    // Retrieve all topics from the database and print them
+    final topics = await dbHelper.retrieveAllTopics();
+
+
+    // Update the state with the retrieved topics
+    setState(() {
+      // Convert the list of Topic objects to a list of maps
+      scienceTopics = topics.map((topic) => topic.toMap()).toList();
+      filteredTopics = List.from(scienceTopics);
+      print(filteredTopics);
+    });
   }
 
   void filterTopics(String query) {
@@ -145,8 +230,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               .map(
                                 (topic) => DataRow(
                               cells: [
-                                DataCell(Text(topic['topic']!)),
-                                DataCell(Text(topic['class']!)),
+                                DataCell(Container(
+                                  width: 100, // Set a specific width for the Container
+                                  child: Text(
+                                    topic['topicName']!,
+                                    overflow: TextOverflow.ellipsis, // Allow text to overflow with ellipsis
+                                  ),
+                                ),),
+                                DataCell(Text(topic['classTaught']!)),
                                 DataCell(Text(topic['term']!)),
                                 DataCell(Row(
                                   children: [
@@ -158,8 +249,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           MaterialPageRoute(
                                             builder: (context) =>
                                                 SessionsPage(
-                                                    topic: topic['topic']!,
-                                                    action: 'Prepare'),
+                                                  topic: topic['topicName'],
+                                                  topicId: topic['id'],
+                                                ),
                                           ),
                                         );
                                       },
@@ -184,9 +276,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           MaterialPageRoute(
                                             builder: (context) =>
                                                 SessionsPage(
-                                                    topic: topic['topic']!,
-                                                    action:
-                                                    'Start a Lesson'),
+                                                  topic: topic['topicName']!,
+                                                  topicId: topic['id']!,
+                                                ),
                                           ),
                                         );
                                       },
@@ -200,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           BorderRadius.circular(20),
                                         ),
                                       ),
-                                      child: Text('Start a Lesson'),
+                                      child: Text('Start'),
                                     ),
                                   ],
                                 )),
