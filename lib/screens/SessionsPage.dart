@@ -8,11 +8,9 @@ import 'package:http/http.dart' as http; // Import http package for making api r
 import '../database/database.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-
 class SessionsPage extends StatefulWidget {
   final String topic;
   final int topicId;
-
 
   SessionsPage({required this.topic, required this.topicId});
 
@@ -24,7 +22,6 @@ class _SessionsPageState extends State<SessionsPage> {
   List<Map<String, dynamic>> sessions = [];
   late final Connectivity _connectivity;
 
-
   @override
   void initState() {
     super.initState();
@@ -34,26 +31,12 @@ class _SessionsPageState extends State<SessionsPage> {
     fetchLocalData();
   }
 
-  /*
-  Future<void> _checkInternetAndFetchData() async {
-    var connectivityResult = await _connectivity.checkConnectivity();
-    if (connectivityResult.contains(ConnectivityResult.mobile) || connectivityResult.contains(ConnectivityResult.wifi)) {
-      fetchData();
-      print("-------------------------- internet -------------");
-    } else {
-      fetchLocalData();
-      print("--------------------------no internet -------------");
-    }
-  }
-
-   */
-
   Future<void> fetchData() async {
-
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
-    final response = await http.get(Uri.parse('http://161.97.81.168:8080/viewSessions/${widget.topicId}'));
+    final response = await http
+        .get(Uri.parse('http://161.97.81.168:8080/viewSessions/${widget.topicId}'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
@@ -81,7 +64,6 @@ class _SessionsPageState extends State<SessionsPage> {
         sessions = sessionsData.map((session) => session.toMap()).toList();
         //print(sessions);
         print("------------------session page------------------------------");
-
       });
     } else {
       throw Exception('Failed to load data');
@@ -89,10 +71,8 @@ class _SessionsPageState extends State<SessionsPage> {
   }
 
   Future<void> fetchLocalData() async {
-
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
-
 
     // Retrieve all sessions under a topic from the database and print them
     final sessionsData = await dbHelper.retrieveAllSession(widget.topicId);
@@ -102,11 +82,8 @@ class _SessionsPageState extends State<SessionsPage> {
       sessions = sessionsData.map((session) => session.toMap()).toList();
       //print(sessions);
       print("------------------session page------------------------------");
-
     });
-
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -143,48 +120,63 @@ class _SessionsPageState extends State<SessionsPage> {
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: SizedBox(
-                          width: MediaQuery.of(context).size.width, // Set the width to the screen width
+                          width: MediaQuery.of(context).size.width,
                           child: DataTable(
                             columnSpacing: 30.0,
                             columns: [
-                              DataColumn(label: SizedBox(width: 200, child: Text('Session Name', textAlign: TextAlign.center))),
-                              DataColumn(label: SizedBox(width: 120, child: Text('Next', textAlign: TextAlign.center))),
+                              DataColumn(label: Text('No.', textAlign: TextAlign.center)),
+                              DataColumn(label: Text('Session Name', textAlign: TextAlign.center)),
+                              DataColumn(label: Text('Start Session', textAlign: TextAlign.center)),
                             ],
-                            rows: sessions
-                                .map(
-                                  (session) => DataRow(
-                                cells: [
-                                  DataCell(SizedBox(width: 200, child: Text(session['sessionName'], textAlign: TextAlign.center))),
-                                  DataCell(Container(
-                                    width: 120, // Set a fixed width for the button
+                            rows: sessions.map((session) {
+                              int index = sessions.indexOf(session) + 1; // Calculate the index
+                              return DataRow(cells: [
+                                DataCell(
+                                  Text(
+                                    '$index',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                DataCell(
+                                  Container(
+                                    width: MediaQuery.of(context).size.width * 0.4,
+                                    child: Text(
+                                      session['sessionName'],
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Container(
+                                    width: MediaQuery.of(context).size.width * 0.3,
                                     child: ElevatedButton(
                                       onPressed: () {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => SessionDetailsPage(
-                                                sessionName: session['sessionName']!,
-                                                sessionId:session['id']!
+                                              sessionName: session['sessionName']!,
+                                              sessionId: session['id']!,
                                             ),
                                           ),
                                         );
                                       },
                                       style: ElevatedButton.styleFrom(
-                                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5), // Adjust padding
+                                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
                                       ),
                                       child: Text(
-                                        'Next',
+                                        'View',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14, // Adjust font size
+                                          fontSize: 14,
                                         ),
                                       ),
                                     ),
-                                  )),
-                                ],
-                              ),
-                            )
-                                .toList(),
+                                  ),
+                                ),
+                              ]);
+                            }).toList(),
                           ),
                         ),
                       ),
@@ -201,7 +193,6 @@ class _SessionsPageState extends State<SessionsPage> {
                         ],
                       ),
                       SizedBox(height: 25.0),
-                      // Don't have an account
                       GestureDetector(
                         onTap: () {
                           Navigator.push(

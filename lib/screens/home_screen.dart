@@ -157,13 +157,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Padding(
                               padding: const EdgeInsets.only(right: 8.0),
                               child: DropdownButtonFormField<String>(
-                                value: 'Class 1',
+                                value: 'Choose Class',
                                 onChanged: (String? newValue) {},
                                 items: <String>[
-                                  'Class 1',
-                                  'Class 2',
-                                  'Class 3',
-                                  'Class 4'
+                                  // ,
+                                  // 'Class 2',
+                                  // 'Class 3',
+                                  // 'Class 4'0
                                 ].map<DropdownMenuItem<String>>(
                                         (String value) {
                                       return DropdownMenuItem<String>(
@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   'Term 1',
                                   'Term 2',
                                   'Term 3',
-                                  'Term 4'
+                                  // 'Term 4'
                                 ].map<DropdownMenuItem<String>>(
                                         (String value) {
                                       return DropdownMenuItem<String>(

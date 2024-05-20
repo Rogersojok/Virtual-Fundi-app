@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/theme.dart';
 import '../widgets/custom_scaffold.dart';
-import 'activity_page.dart'; // Import the Activity page
 import 'dart:convert'; // for convert response to json
 import 'package:http/http.dart' as http; // Import http package for making api request.
 import 'package:video_player/video_player.dart';
@@ -11,11 +10,6 @@ import '../database/database.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-
-
-
-
-
 
 // class for data fetched from the database
 
@@ -42,8 +36,6 @@ class _ActivityPageState extends State<ActivityPage> {
   late String _videoFilePath;
   late final Connectivity _connectivity;
 
-
-
   @override
   void initState() {
     super.initState();
@@ -68,7 +60,6 @@ class _ActivityPageState extends State<ActivityPage> {
    */
 
   Future<void> fetchData() async {
-
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
@@ -81,7 +72,6 @@ class _ActivityPageState extends State<ActivityPage> {
 
       // Convert JSON data to Session objects and insert into the database
       for (var jsonData in data) {
-
         final activity = Activity(
           id: jsonData['id'],
           title: jsonData['title'],
@@ -91,23 +81,23 @@ class _ActivityPageState extends State<ActivityPage> {
           mediaType: jsonData['mediaType'],
           time: jsonData['time'] ?? 5,
           notes: jsonData['notes'],
-          image: jsonData['image']??"",
-          imageTitle: jsonData['image_title']??"",
+          image: jsonData['image'] ?? "",
+          imageTitle: jsonData['image_title'] ?? "",
           video: filePath ?? "",
-          videoTitle: jsonData['video_title']??"",
+          videoTitle: jsonData['video_title'] ?? "",
           createdAt: DateTime.parse(jsonData['created_at']),
         );
         await dbHelper.insertActivity(activity);
-
       }
 
       // Retrieve all topics from the database and print them
-      activitiesD = await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+      activitiesD =
+      await dbHelper.retrieveActivitiesBySession(widget.sessionId);
 
       setState(() {
-        activities = activitiesD.map((activity) => activity.toMap()).toList();
+        activities =
+            activitiesD.map((activity) => activity.toMap()).toList();
         print(activities); // Handle null items in the list
-
       });
     } else {
       throw Exception('Failed to load data');
@@ -115,25 +105,26 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Future<void> fetchLocalData() async {
-
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
-
     // Retrieve all topics from the database and print them
-    activitiesD = await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+    activitiesD =
+    await dbHelper.retrieveActivitiesBySession(widget.sessionId);
 
     setState(() {
-      activities = activitiesD.map((activity) => activity.toMap()).toList();
+      activities =
+          activitiesD.map((activity) => activity.toMap()).toList();
       print(activities); // Handle null items in the list
     });
   }
 
-
-  Future<String> downloadFile(String fileUrl, Function(int) onProgress) async {
+  Future<String> downloadFile(
+      String fileUrl, Function(int) onProgress) async {
     try {
       var httpClient = http.Client();
-      var request = http.Request('GET', Uri.parse('http://161.97.81.168:8080${fileUrl}'));
+      var request = http.Request('GET', Uri.parse(
+          'http://161.97.81.168:8080${fileUrl}'));
       var response = await httpClient.send(request);
 
       // Extract filename from the URL
@@ -165,10 +156,8 @@ class _ActivityPageState extends State<ActivityPage> {
             await file.writeAsBytes(bytes);
             print('filePath in download function: $filePath');
 
-
             _videoFilePath = filePath;
             print('onDone _videofilepath ${_videoFilePath}');
-
 
             // update the database
             final dbHelper = DatabaseHelper();
@@ -183,24 +172,25 @@ class _ActivityPageState extends State<ActivityPage> {
               mediaType: activities[currentIndex]['mediaType'],
               time: activities[currentIndex]['time'] ?? 5,
               notes: activities[currentIndex]['notes'],
-              image: activities[currentIndex]['image']??"",
-              imageTitle: activities[currentIndex]['imageTitle']??"",
+              image: activities[currentIndex]['image'] ?? "",
+              imageTitle: activities[currentIndex]['imageTitle'] ?? "",
               video: filePath ?? "",
-              videoTitle: activities[currentIndex]['videoTitle']??"",
-              createdAt: DateTime.parse(activities[currentIndex]['createdAt']),
+              videoTitle: activities[currentIndex]['videoTitle'] ?? "",
+              createdAt:
+              DateTime.parse(activities[currentIndex]['createdAt']),
             );
             // Update the activity in the database
             await dbHelper.updateActivity(UpdateActivity);
 
             // update activity data
-            activitiesD = await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+            activitiesD =
+            await dbHelper.retrieveActivitiesBySession(widget.sessionId);
 
             setState(() {
-              activities = activitiesD.map((activity) => activity.toMap()).toList();
+              activities =
+                  activitiesD.map((activity) => activity.toMap()).toList();
               print(activities); // Handle null items in the list
-
             });
-
           },
 
           onError: (e) {
@@ -208,18 +198,16 @@ class _ActivityPageState extends State<ActivityPage> {
           },
         );
         return filePath;
-
       } else {
         // Handle HTTP error response
-        throw Exception('Failed to download file: HTTP ${response.statusCode}');
+        throw Exception(
+            'Failed to download file: HTTP ${response.statusCode}');
       }
     } catch (e) {
       // Handle other errors, such as network issues or invalid URLs
       throw Exception('Failed to download file: $e');
     }
   }
-
-
 
   Future<String> downloadImage(String imageUrl) async {
     var httpClient = http.Client();
@@ -244,7 +232,6 @@ class _ActivityPageState extends State<ActivityPage> {
     return filePath;
   }
 
-
   Widget _buildActivityWidget(Map<String, dynamic> activity) {
     print('currentIndex: $currentIndex'); // Using string interpolation
 
@@ -264,7 +251,7 @@ class _ActivityPageState extends State<ActivityPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildRow('Activity Name:', activity['title'] ?? ''),
+        // _buildRow('Activity Name:', activity['title'] ?? ''),
         _buildRow('Duration:', activity['time'].toString() + ' Minutes' ?? ''),
         _buildRow("Teacher's Activity:", activity['teacherActivity'] ?? ''),
         _buildRow("Learner's Activity:", activity['studentActivity'] ?? ''),
@@ -291,7 +278,6 @@ class _ActivityPageState extends State<ActivityPage> {
       ),
     );
   }
-
 
   Widget _buildImageActivity(Map<String, dynamic> activity) {
     return Column(
@@ -337,28 +323,27 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
-
   Widget _buildVideoActivity(Map<String, dynamic> activity) {
     String videoFilePath = activity['video'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Activity Name:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(width: 10),
-            Text(activity['title'] ?? ''),
-            // Replace 'activityName' with the correct key from your activity map
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     Text(
+        //       'Activity Name:',
+        //       style: TextStyle(fontWeight: FontWeight.bold),
+        //     ),
+        //     SizedBox(width: 10),
+        //     Text(activity['title'] ?? ''),
+        //     // Replace 'activityName' with the correct key from your activity map
+        //   ],
+        // ),
         SizedBox(height: 8),
         Row(
           children: [
             Text(
-              'Video Title:',
+              '',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(width: 10),
@@ -373,10 +358,10 @@ class _ActivityPageState extends State<ActivityPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Video:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              // Text(
+              //   'Video:',
+              //   style: TextStyle(fontWeight: FontWeight.bold),
+              // ),
               SizedBox(height: 8),
               // Render video-specific UI elements
               videoFilePath.isNotEmpty
@@ -385,10 +370,12 @@ class _ActivityPageState extends State<ActivityPage> {
                 onPressed: () async {
                   try {
                     // Call the download function here
-                    String filePath = await downloadFile(dataVideoD[currentIndex]['video'], (progress) {
-                      print('${dataVideoD[currentIndex]['video']} Download progress: $progress');
-
-                    });
+                    String filePath = await downloadFile(
+                        dataVideoD[currentIndex]['video'],
+                            (progress) {
+                          print(
+                              '${dataVideoD[currentIndex]['video']} Download progress: $progress');
+                        });
                     // Once download is complete, update the video file path and start initializing the video player
                     print('after update path $filePath');
                     setState(() {
@@ -397,7 +384,6 @@ class _ActivityPageState extends State<ActivityPage> {
                     });
 
                     await _initializeVideoPlayerFuture;
-
                   } catch (error) {
                     // Handle download error if needed
                     print('Download error: $error');
@@ -414,15 +400,27 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
-
-
-
   void nextActivity() {
     setState(() {
       if (currentIndex < activities.length - 1) {
         currentIndex++;
       } else {
-        currentIndex = 0; // Wrap around to the first activity
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EndOfSessionPage(),
+          ),
+        );
+      }
+    });
+  }
+
+  void previousActivity() {
+    setState(() {
+      if (currentIndex > 0) {
+        currentIndex--;
+      } else {
+        currentIndex = activities.length - 1; // Wrap around to the last activity
       }
     });
   }
@@ -454,7 +452,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     children: [
                       const SizedBox(height: 20.0),
                       Text(
-                        'Activity Page',
+                        '',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -477,9 +475,18 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       const SizedBox(height: 20.0),
-                      ElevatedButton(
-                        onPressed: nextActivity,
-                        child: Text('Next Activity'),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton(
+                            onPressed: previousActivity,
+                            child: Text('Previous'),
+                          ),
+                          ElevatedButton(
+                            onPressed: nextActivity,
+                            child: Text('Next'),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20.0),
                     ],
@@ -492,5 +499,67 @@ class _ActivityPageState extends State<ActivityPage> {
       ),
     );
   }
+}
 
+class EndOfSessionPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScaffold(
+        child: Column(
+          children: [
+            const Expanded(
+              flex: 1,
+              child: SizedBox(height: 10),
+            ),
+            Expanded(
+              flex: 7,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(25.0, 20.0, 25.0, 20.0),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40.0),
+                    topRight: Radius.circular(40.0),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20.0),
+                      Text(
+                        'End of Session',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue, // Update this color as needed
+                        ),
+                      ),
+                      const SizedBox(height: 20.0),
+                      Text(
+                        'Congratulations! You have completed all activities in this session.',
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 20.0),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        child: Text('Back to Session'),
+                      ),
+                      const SizedBox(height: 20.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

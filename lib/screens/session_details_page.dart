@@ -113,11 +113,11 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data:'Resources: ${session.fundibotsResources}'),
+                        child: Html(data:'Resources Provided by Fundi Bots: ${session.fundibotsResources}'),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data: 'School: ${session.schoolResources}'),
+                        child: Html(data: 'Resources Provided by School: ${session.schoolResources}'),
                       ),
                       const SizedBox(height: 20.0),
                       ElevatedButton(
