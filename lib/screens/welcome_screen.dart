@@ -6,6 +6,7 @@ import 'package:virtualfundi/theme/theme.dart';
 import 'package:virtualfundi/widgets/custom_scaffold.dart';
 import 'package:virtualfundi/widgets/welcome_button.dart';
 
+
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({Key? key});
 
@@ -27,7 +28,7 @@ class WelcomeScreen extends StatelessWidget {
                   text: const TextSpan(
                     children: [
                       TextSpan(
-                        text: 'Welcome Back To!\n',
+                        text: 'Welcome To!\n',
                         style: TextStyle(
                           fontSize: 45.0,
                           fontWeight: FontWeight.w600,

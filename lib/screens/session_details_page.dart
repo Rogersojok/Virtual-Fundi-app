@@ -6,6 +6,7 @@ import 'dart:convert'; // for convert response to json
 import 'package:http/http.dart' as http; // Import http package for making api request.
 import 'package:flutter_html/flutter_html.dart';
 import '../database/database.dart';
+import '../utills/animateAButton.dart';
 
 class SessionDetailsPage extends StatefulWidget {
   final String sessionName;
@@ -120,14 +121,14 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
                         child: Html(data: 'Resources Provided by School: ${session.schoolResources}'),
                       ),
                       const SizedBox(height: 20.0),
-                      ElevatedButton(
+                      AnimatedElevatedButton(
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => ActivityPage(sessionId: session.id,)),
                           );
                         },
-                        child: Text('Next'),
+                        text: 'Next',
                       ),
                       const SizedBox(height: 20.0),
                     ],

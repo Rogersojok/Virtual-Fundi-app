@@ -9,6 +9,7 @@ import '../theme/theme.dart';
 import '../database/database.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 //import 'package:login_signup/utils/internet.dart';
+import '../utills/animateAButton.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -241,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 DataCell(Text(topic['term']!)),
                                 DataCell(Row(
                                   children: [
-                                    ElevatedButton(
+                                    AnimatedElevatedButton(
                                       onPressed: () {
                                         // Handle Prepare button press
                                         Navigator.push(
@@ -255,21 +256,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         );
                                       },
-                                      style: ElevatedButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        backgroundColor: Colors.blue,
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                          BorderRadius.circular(20),
-                                        ),
-                                      ),
-                                      child: Text('Prepare'),
+                                      text: 'Prepare',
                                     ),
                                     SizedBox(width: 10),
-                                    ElevatedButton(
+                                    AnimatedElevatedButton(
                                       onPressed: () {
+
                                         // Handle Start a Lesson button press
                                         Navigator.push(
                                           context,
@@ -282,17 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         );
                                       },
-                                      style: ElevatedButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        backgroundColor: Colors.green,
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                          BorderRadius.circular(20),
-                                        ),
-                                      ),
-                                      child: Text('Start'),
+                                      text: 'Start',
                                     ),
                                   ],
                                 )),

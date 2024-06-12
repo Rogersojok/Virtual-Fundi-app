@@ -7,6 +7,7 @@ import 'dart:convert'; // for convert response to json
 import 'package:http/http.dart' as http; // Import http package for making api request.
 import '../database/database.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../utills/animateAButton.dart';
 
 class SessionsPage extends StatefulWidget {
   final String topic;
@@ -150,7 +151,7 @@ class _SessionsPageState extends State<SessionsPage> {
                                 DataCell(
                                   Container(
                                     width: MediaQuery.of(context).size.width * 0.3,
-                                    child: ElevatedButton(
+                                    child: AnimatedElevatedButton(
                                       onPressed: () {
                                         Navigator.push(
                                           context,
@@ -162,19 +163,11 @@ class _SessionsPageState extends State<SessionsPage> {
                                           ),
                                         );
                                       },
-                                      style: ElevatedButton.styleFrom(
-                                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-                                      ),
-                                      child: Text(
-                                        'View',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+
+                                      text:'View',
                                       ),
                                     ),
                                   ),
-                                ),
                               ]);
                             }).toList(),
                           ),

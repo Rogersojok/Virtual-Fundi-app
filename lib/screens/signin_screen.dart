@@ -5,6 +5,8 @@ import 'package:virtualfundi/screens/signup_screen.dart';
 import 'package:virtualfundi/widgets/custom_scaffold.dart';
 import '../theme/theme.dart';
 import 'home_screen.dart';
+import '../database/database.dart';
+import '../utills/animateAButton.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key});
@@ -14,8 +16,54 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    final dbHelper = DatabaseHelper();
+    dbHelper.initializeDatabase();
+  }
+
   final _formSignInKey = GlobalKey<FormState>();
-  bool rememberPassword = true;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _login() async {
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      // Display error
+      return;
+    }
+
+    final dbHelper = DatabaseHelper();
+    await dbHelper.initializeDatabase();
+
+    // get use with the provided email
+    final user = await dbHelper.getUser(email);
+
+    // check if the email exist
+    if(user?.email != null){
+      print('user exist');
+      // go ahead and check is password matches
+      if(user?.password == password){
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('logged in successfully')));
+        // Navigate to home screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (e) => HomeScreen(),
+          ),
+        );
+      }else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Wrong password')));
+      }
+    }else{
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User not found')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +82,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 SizedBox(width: 10),
                 Text(
-                  'Welcome back',
+                  'Welcome ',
                   style: TextStyle(
                     fontSize: 30.0,
                     fontWeight: FontWeight.w900,
@@ -65,6 +113,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         height: 40.0,
                       ),
                       TextFormField(
+                        controller: _emailController,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Email';
@@ -95,6 +144,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         height: 25.0,
                       ),
                       TextFormField(
+                        controller: _passwordController,
                         obscureText: true,
                         obscuringCharacter: '*',
                         validator: (value) {
@@ -128,17 +178,9 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Navigate to home screen
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => HomeScreen(),
-                              ),
-                            );
-                          },
-                          child: Text('Sign up'),
+                        child: AnimatedElevatedButton(
+                          onPressed: _login,
+                          text: "Login",
                         ),
                       ),
                       const SizedBox(

@@ -140,6 +140,7 @@ class Activity {
     required this.createdAt,
   });
 
+  
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -158,6 +159,7 @@ class Activity {
     };
   }
 
+
   factory Activity.fromMap(Map<String, dynamic> map) {
     return Activity(
       id: map['id'],
@@ -175,7 +177,6 @@ class Activity {
       createdAt: DateTime.parse(map['createdAt']),
     );
   }
-
   @override
   String toString() {
     return 'Activity{id: $id, title: $title, session: $session, teacherActivity: $teacherActivity, studentActivity: $studentActivity, mediaType: $mediaType, time: $time, notes: $notes, image: $image, imageTitle: $imageTitle, video: $video, videoTitle: $videoTitle, createdAt: $createdAt}';
@@ -183,6 +184,61 @@ class Activity {
 
 }
 
+
+class User {
+  final int? id;
+  final String name;
+  final String password;
+  final String school;
+  final String email;
+
+  User({
+    this.id,
+    required this.name,
+    required this.password,
+    required this.school,
+    required this.email
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'password': password,
+      'school': school,
+      'email': email,
+    };
+  }
+
+  factory User.fromMap(Map<String, dynamic> map){
+    return User(
+      id: map['id'],
+      name: map['name'],
+      password: map['password'],
+      school: map['school'],
+      email: map['email'],
+    );
+  }
+
+}
+
+
+class ClassSubject {
+  final int? id;
+  final String className;
+  final String subjectName;
+  final int userId;
+
+  ClassSubject({this.id, required this.className, required this.subjectName, required this.userId});
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'class_name': className,
+      'subject_name': subjectName,
+      'user_id': userId,
+    };
+  }
+}
 
 
 class DatabaseHelper {
@@ -192,7 +248,7 @@ class DatabaseHelper {
     // Initialize the database
     WidgetsFlutterBinding.ensureInitialized();
     _database = await openDatabase(
-      join(await getDatabasesPath(), 'virtualFundiDb.db'),
+      join(await getDatabasesPath(), 'virtualFundiDb5.db'), //virtualFundiDb.db'
       onCreate: (db, version) {
         db.execute(
           'CREATE TABLE topics(id INTEGER PRIMARY KEY, topicName TEXT, topicCode TEXT, term TEXT, cat TEXT, subject TEXT, classTaught TEXT, dateCreated TEXT)',
@@ -203,10 +259,70 @@ class DatabaseHelper {
         db.execute(
           'CREATE TABLE activities(id INTEGER PRIMARY KEY, title TEXT DEFAULT "", session INTEGER, teacherActivity TEXT DEFAULT "", studentActivity TEXT DEFAULT "", mediaType TEXT DEFAULT "", time INTEGER, notes TEXT DEFAULT "", image TEXT DEFAULT "", imageTitle TEXT DEFAULT "", video TEXT DEFAULT "", videoTitle TEXT DEFAULT "", createdAt TEXT)',
         );
+
+        db.execute(
+          "CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, password TEXT, school TEXT, email TEXT)",
+        );
+        db.execute(
+          "CREATE TABLE class_subjects(id INTEGER PRIMARY KEY AUTOINCREMENT, class_name TEXT, subject_name TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))",
+        );
+
       },
       version: 1,
     );
   }
+
+
+  // User operations
+  Future<void> insertUser(User user) async {
+    final db = await _database;
+    await db.insert(
+      'users',
+      user.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Retrieve a user by email.
+  Future<User?> getUser(String email) async {
+    final List<Map<String, dynamic>> maps = await _database.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+
+    // Check if session with given ID exists
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    } else {
+      return null; // User not found
+    }
+  }
+
+
+/*
+  Future<User?> getUser(String email) async {
+    final db = await _database;
+    var result = await db.query(
+      'users',
+      where: "email = ?",
+      whereArgs: [email],
+    );
+
+    if (result != null && result.isNotEmpty) {
+      return User(
+        id: result.first['id'] as int?,
+        name: result.first['name'] as String,
+        password: result.first['password'] as String,
+        school: result.first['school'] as String,
+        email: result.first['email'] as String,
+      );
+    }
+    return null;
+  }
+
+ */
+
 
   Future<void> insertTopic(Topic topic) async {
     try {
@@ -225,6 +341,7 @@ class DatabaseHelper {
       }
     }
   }
+
 
   Future<List<Topic>> retrieveAllTopics() async {
     final db = await _database;

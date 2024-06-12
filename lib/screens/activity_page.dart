@@ -10,6 +10,7 @@ import '../database/database.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../utills/animateAButton.dart';
 
 // class for data fetched from the database
 
@@ -478,13 +479,13 @@ class _ActivityPageState extends State<ActivityPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ElevatedButton(
+                          AnimatedElevatedButton(
                             onPressed: previousActivity,
-                            child: Text('Previous'),
+                            text: 'Previous',
                           ),
-                          ElevatedButton(
+                          AnimatedElevatedButton(
                             onPressed: nextActivity,
-                            child: Text('Next'),
+                            text: 'Next',
                           ),
                         ],
                       ),
@@ -544,12 +545,12 @@ class EndOfSessionPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20.0),
-                      ElevatedButton(
+                      AnimatedElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
                           Navigator.pop(context);
                         },
-                        child: Text('Back to Session'),
+                        text: 'Back to Session',
                       ),
                       const SizedBox(height: 20.0),
                     ],

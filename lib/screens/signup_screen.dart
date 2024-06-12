@@ -4,6 +4,8 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:virtualfundi/screens/signin_screen.dart';
 import 'package:virtualfundi/theme/theme.dart';
 import 'package:virtualfundi/widgets/custom_scaffold.dart';
+import '../database/database.dart';
+import '../utills/animateAButton.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -15,6 +17,68 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formSignupKey = GlobalKey<FormState>();
   bool agreePersonalData = true;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _schoolController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _signup() async {
+    print('Hello');
+    final dbHelper = DatabaseHelper();
+    await dbHelper.initializeDatabase();
+
+    String username = _nameController.text;
+    String school = _schoolController.text;
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+
+    // check if the fields are not blank
+    if (username.isEmpty ) {
+      // Display error
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enter username')));
+      return;
+    }else if(password.isEmpty){
+      // Display error
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enter password')));
+      return;
+    }else if(school.isEmpty){
+      // Display error
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enter school')));
+      return;
+    }else if(email.isEmpty){
+      // Display error
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enter email')));
+      return;
+    }
+
+    // get user where email == email provided.
+    final user = await dbHelper.getUser(email);
+    print(user);
+    // check id this user exist
+    if(user?.email != null){
+      print('user exist');
+    }else{
+
+      // if the user does exit, insert the user
+      final insertUser = User(
+          name: username,
+          password: password,
+          school: school,
+          email: email
+      );
+      await dbHelper.insertUser(insertUser);
+      // Navigate to login
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (e) => SignInScreen(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
@@ -58,6 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       // full name
                       TextFormField(
+                        controller: _nameController,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Full name';
@@ -87,8 +152,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(
                         height: 25.0,
                       ),
-                    //Class
+                    //School
                       TextFormField(
+                        controller: _schoolController,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter School';
@@ -118,40 +184,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(
                         height: 25.0,
                       ),
-                      //School
-                      TextFormField(
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter Class';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          label: const Text('Class'),
-                          hintText: 'School',
-                          hintStyle: const TextStyle(
-                            color: Colors.black26,
-                          ),
-                          border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: Colors.black12, // Default border color
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: Colors.black12, // Default border color
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 25.0,
-                      ),
 
                       // email
                       TextFormField(
+                        controller: _emailController,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Email';
@@ -183,6 +219,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       // password
                       TextFormField(
+                        controller: _passwordController,
                         obscureText: true,
                         obscuringCharacter: '*',
                         validator: (value) {
@@ -247,24 +284,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // signup button
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_formSignupKey.currentState!.validate() &&
-                                agreePersonalData) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Processing Data'),
-                                ),
-                              );
-                            } else if (!agreePersonalData) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Please agree to the processing of personal data')),
-                              );
-                            }
-                          },
-                          child: const Text('Sign up'),
+                        child: AnimatedElevatedButton(
+                          onPressed: _signup,
+                          text: "Sign Up",
                         ),
                       ),
                       const SizedBox(
