@@ -139,12 +139,25 @@ class _SessionsPageState extends State<SessionsPage> {
                                   ),
                                 ),
                                 DataCell(
-                                  Container(
-                                    width: MediaQuery.of(context).size.width * 0.4,
-                                    child: Text(
-                                      session['sessionName'],
-                                      textAlign: TextAlign.center,
-                                      overflow: TextOverflow.ellipsis,
+                                  GestureDetector(
+                                    onTap: (){
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => SessionDetailsPage(
+                                            sessionName: session['sessionName']!,
+                                            sessionId: session['id']!,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width * 0.4,
+                                      child: Text(
+                                        session['sessionName'],
+                                        textAlign: TextAlign.center,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ),
                                 ),
