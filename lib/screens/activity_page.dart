@@ -26,12 +26,15 @@ class _ActivityPageState extends State<ActivityPage> {
   // List of activities fetched from the database
   List<Map<String, dynamic>> activities = [];
   int currentIndex = 0;
+  int currentTextIndex = 0;
   int progressD = 0;
   late VideoPlayerController _controller;
   late Future<void> _initializeVideoPlayerFuture;
   late String filePath = "";
   List<dynamic> dataVideoD = [];
   List<Activity> activitiesD = [];
+  int sessionProgress = 0;
+  int elementIncrement = 0;
 
   double _progress = 0.0;
   late String _videoFilePath;
@@ -94,7 +97,6 @@ class _ActivityPageState extends State<ActivityPage> {
       // Retrieve all topics from the database and print them
       activitiesD =
       await dbHelper.retrieveActivitiesBySession(widget.sessionId);
-
       setState(() {
         activities =
             activitiesD.map((activity) => activity.toMap()).toList();
@@ -247,18 +249,21 @@ class _ActivityPageState extends State<ActivityPage> {
         return Container(); // Handle other media types as needed
     }
   }
+  // List of keys or values to be skipped in each activity
+  List<String> textElementsToSkip = ['teacherActivity', 'studentActivity', 'notes'];
 
   Widget _buildTextActivity(Map<String, dynamic> activity) {
+    // Convert the map entries to a list and filter them
+    List<MapEntry<String, dynamic>> activityEntries = activity.entries
+        .where((entry) => textElementsToSkip.contains(entry.key))
+        .toList();
+    print(activityEntries);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // _buildRow('Activity Name:', activity['title'] ?? ''),
-        _buildRow('Duration:', activity['time'].toString() + ' Minutes' ?? ''),
-        _buildRow("Teacher's Activity:", activity['teacherActivity'] ?? ''),
-        _buildRow("Learner's Activity:", activity['studentActivity'] ?? ''),
-        _buildRow('Notes:', activity['notes'] ?? ''),
+        if (activityEntries.isNotEmpty)
+          _buildRow(activityEntries[currentTextIndex].key, activityEntries[currentTextIndex].value.toString()),
         SizedBox(height: 8),
-        // Render other text-specific UI elements
       ],
     );
   }
@@ -403,6 +408,8 @@ class _ActivityPageState extends State<ActivityPage> {
 
   void nextActivity() {
     setState(() {
+      elementIncrement = 0;
+      currentTextIndex = 0; // Reset text index for the new activity
       if (currentIndex < activities.length - 1) {
         currentIndex++;
       } else {
@@ -418,10 +425,33 @@ class _ActivityPageState extends State<ActivityPage> {
 
   void previousActivity() {
     setState(() {
+      elementIncrement = 0;
+      currentTextIndex = textElementsToSkip.length - 1; // Reset text index for the new activity
       if (currentIndex > 0) {
         currentIndex--;
       } else {
         currentIndex = activities.length - 1; // Wrap around to the last activity
+        // to move back to the session details
+      }
+    });
+  }
+
+  void nextTextElement() {
+    setState(() {
+      elementIncrement = 1;
+      currentTextIndex++;
+      if (currentTextIndex >= textElementsToSkip.length) {
+        nextActivity();
+      }
+    });
+  }
+
+  void previousTextElement() {
+    setState(() {
+      elementIncrement = -1;
+      currentTextIndex--;
+      if (currentTextIndex < 0) {
+        previousActivity();
       }
     });
   }
@@ -453,12 +483,15 @@ class _ActivityPageState extends State<ActivityPage> {
                     children: [
                       const SizedBox(height: 20.0),
                       Text(
-                        '',
+                        activities[currentIndex]['title'],
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.blue, // Update this color as needed
                         ),
+                      ),
+                      Text(
+                        ((currentIndex + elementIncrement)/ (activities.length + elementIncrement) *(100)).round().toString() + "/" + "100",
                       ),
                       const SizedBox(height: 20.0),
                       // Display either loading indicator or activity widget
@@ -480,11 +513,11 @@ class _ActivityPageState extends State<ActivityPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           AnimatedElevatedButton(
-                            onPressed: previousActivity,
+                            onPressed: activities[currentIndex]['mediaType'] == "text" ? previousTextElement : previousActivity,
                             text: 'Previous',
                           ),
                           AnimatedElevatedButton(
-                            onPressed: nextActivity,
+                            onPressed: activities[currentIndex]['mediaType'] == "text" ? nextTextElement : nextActivity,
                             text: 'Next',
                           ),
                         ],
@@ -536,6 +569,9 @@ class EndOfSessionPage extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: Colors.blue, // Update this color as needed
                         ),
+                      ),
+                      Text(
+                        "100" "/" + "100",
                       ),
                       const SizedBox(height: 20.0),
                       Text(
