@@ -230,6 +230,7 @@ class ClassSubject {
   final int userId;
 
   ClassSubject({this.id, required this.className, required this.subjectName, required this.userId});
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -238,11 +239,28 @@ class ClassSubject {
       'user_id': userId,
     };
   }
+  factory ClassSubject.fromMap(Map<String, dynamic> map){
+    return ClassSubject(
+      id: map['id'],
+      className: map['class_name'],
+      subjectName: map['subject_name'],
+      userId: map['user_id'],
+
+    );
+  }
 }
 
 
 class DatabaseHelper {
-  late Database _database;
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
+
+  factory DatabaseHelper() {
+    return _instance;
+  }
+
+  DatabaseHelper._internal();
+
+  Database? _database;
 
   Future<void> initializeDatabase() async {
     // Initialize the database
@@ -264,7 +282,7 @@ class DatabaseHelper {
           "CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, password TEXT, school TEXT, email TEXT)",
         );
         db.execute(
-          "CREATE TABLE class_subjects(id INTEGER PRIMARY KEY AUTOINCREMENT, class_name TEXT, subject_name TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))",
+          "CREATE TABLE class_subjects(id INTEGER PRIMARY KEY AUTOINCREMENT, class_name TEXT, subject_name TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id)), UNIQUE(class_name, subject_name, user_id)",
         );
 
       },
@@ -272,11 +290,17 @@ class DatabaseHelper {
     );
   }
 
+  Future<Database> get database async {
+    if (_database == null) {
+      await initializeDatabase();
+    }
+    return _database!;
+  }
 
   // User operations
   Future<void> insertUser(User user) async {
     final db = await _database;
-    await db.insert(
+    await db?.insert(
       'users',
       user.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -285,7 +309,7 @@ class DatabaseHelper {
 
   // Retrieve a user by email.
   Future<User?> getUser(String email) async {
-    final List<Map<String, dynamic>> maps = await _database.query(
+    final List<Map<String, dynamic>> maps = await _database!.query(
       'users',
       where: 'email = ?',
       whereArgs: [email],
@@ -299,34 +323,48 @@ class DatabaseHelper {
     }
   }
 
-
-/*
-  Future<User?> getUser(String email) async {
-    final db = await _database;
-    var result = await db.query(
+  // Retrieve a user by email.
+  Future<int?> getUserId(String email) async {
+    final List<Map<String, dynamic>> maps = await _database!.query(
       'users',
-      where: "email = ?",
+      where: 'email = ?',
       whereArgs: [email],
     );
 
-    if (result != null && result.isNotEmpty) {
-      return User(
-        id: result.first['id'] as int?,
-        name: result.first['name'] as String,
-        password: result.first['password'] as String,
-        school: result.first['school'] as String,
-        email: result.first['email'] as String,
-      );
+    // Check if session with given ID exists
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first).id;
+    } else {
+      return null; // User not found
     }
-    return null;
   }
 
- */
+  Future<int> addUserSubjectClass(int? userId, String subject, String className) async {
+    final db = await _database;
+    return await db!.insert('class_subjects', {
+      'user_id': userId,
+      'subject_name': subject,
+      'class_name': className,
+    });
+  }
+
+  Future<List<ClassSubject>> getClassSubjectsForUser(int? userId) async {
+    final db = await _database;
+    final List<Map<String, dynamic>> maps = await db!.query(
+      'class_subjects',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+
+    return List.generate(maps.length, (index) {
+      return ClassSubject.fromMap(maps[index]);
+    });
+  }
 
 
   Future<void> insertTopic(Topic topic) async {
     try {
-      await _database.insert(
+      await _database!.insert(
         'topics',
         topic.toMap(),
         conflictAlgorithm: ConflictAlgorithm.abort,
@@ -342,7 +380,7 @@ class DatabaseHelper {
     }
   }
 
-
+/*
   Future<List<Topic>> retrieveAllTopics() async {
     final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query('topics');
@@ -351,9 +389,24 @@ class DatabaseHelper {
     });
   }
 
+ */
+
+  Future<List<Topic>> getTopicsForUser(int userId) async {
+    final db = await _database;
+    final List<Map<String, dynamic>> maps = await db!.rawQuery('''
+    SELECT DISTINCT topics.* FROM topics
+    INNER JOIN class_subjects ON topics.subject = class_subjects.subject_name AND topics.classTaught = class_subjects.class_name
+    WHERE class_subjects.user_id = ?
+  ''', [userId]);
+
+    return List.generate(maps.length, (index) {
+      return Topic.fromMap(maps[index]);
+    });
+  }
+
   Future<int> updateTopic(Topic topic) async {
     final db = await _database;
-    return await db.update(
+    return await db!.update(
       'topics',
       topic.toMap(),
       where: 'id = ?',
@@ -363,7 +416,7 @@ class DatabaseHelper {
 
   Future<int> deleteTopic(int id) async {
     final db = await _database;
-    return await db.delete(
+    return await db!.delete(
       'topics',
       where: 'id = ?',
       whereArgs: [id],
@@ -372,7 +425,7 @@ class DatabaseHelper {
 
   Future<void> insertSession(Session session) async {
     try {
-      await _database.insert(
+      await _database!.insert(
         'sessions',
         session.toMap(),
         conflictAlgorithm: ConflictAlgorithm.abort,
@@ -390,7 +443,7 @@ class DatabaseHelper {
 
   Future<List<Session>> retrieveAllSession(int topicId) async {
     final db = await _database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, dynamic>> maps = await db!.query(
       'sessions',
       where: 'topic = ?',
       whereArgs: [topicId],
@@ -401,7 +454,7 @@ class DatabaseHelper {
 
   // Retrieve a session by ID
   Future<Session?> getSessionById(int sessionId) async {
-    final List<Map<String, dynamic>> maps = await _database.query(
+    final List<Map<String, dynamic>> maps = await _database!.query(
       'sessions',
       where: 'id = ?',
       whereArgs: [sessionId],
@@ -417,7 +470,7 @@ class DatabaseHelper {
 
   Future<int> updateSession(Session session) async {
     final db = await _database;
-    return await db.update(
+    return await db!.update(
       'Sessions',
       session.toMap(),
       where: 'id = ?',
@@ -427,7 +480,7 @@ class DatabaseHelper {
 
   Future<int> deleteSession(int id) async {
     final db = await _database;
-    return await db.delete(
+    return await db!.delete(
       'sessions',
       where: 'id = ?',
       whereArgs: [id],
@@ -437,7 +490,7 @@ class DatabaseHelper {
 
   Future<void> insertActivity(Activity activity) async {
     try {
-      await _database.insert(
+      await _database!.insert(
         'activities',
         activity.toMap(),
         conflictAlgorithm: ConflictAlgorithm.abort,
@@ -453,24 +506,10 @@ class DatabaseHelper {
     }
   }
 
-
-/*
-  // Insert a new activity into the database
-  Future<void> insertActivity(Activity activity) async {
-    final db = await _database;
-    await db.insert(
-      'activities',
-      activity.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
- */
-
   // Retrieve all activities under a session from the database
   Future<List<Activity>> retrieveActivitiesBySession(int sessionId) async {
     final db = await _database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, dynamic>> maps = await db!.query(
       'activities',
       where: 'session = ?',
       whereArgs: [sessionId],
@@ -497,7 +536,7 @@ class DatabaseHelper {
 
   Future<void> updateActivity(Activity activity) async {
     final db = await _database;
-    await db.update(
+    await db!.update(
       'activities',
       activity.toMap(),
       where: 'id = ?',

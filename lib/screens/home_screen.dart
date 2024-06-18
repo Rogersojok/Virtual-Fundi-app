@@ -3,6 +3,7 @@ import '../widgets/custom_scaffold.dart';
 import 'package:http/http.dart' as http; // Import http package
 import 'dart:convert';
 import 'SessionsPage.dart';
+import 'addSubject_Class.dart';
 import 'signin_screen.dart'; // Import SignInScreen
 import 'signup_screen.dart';
 import '../theme/theme.dart';
@@ -13,6 +14,11 @@ import '../utills/animateAButton.dart';
 
 
 class HomeScreen extends StatefulWidget {
+
+  int? userId;
+
+  HomeScreen({required this.userId});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -77,8 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
         await dbHelper.insertTopic(topic);
       }
 
+
       // Retrieve all topics from the database and print them
-      final topics = await dbHelper.retrieveAllTopics();
+      final topics = await dbHelper.getTopicsForUser(widget.userId!);
 
 
       // Update the state with the retrieved topics
@@ -97,11 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> fetchLocalData() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
-
-
-
+    print(widget.userId);
     // Retrieve all topics from the database and print them
-    final topics = await dbHelper.retrieveAllTopics();
+    final topics = await dbHelper.getTopicsForUser(widget.userId!);
 
 
     // Update the state with the retrieved topics
@@ -227,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             DataColumn(label: Text('Term')),
                             DataColumn(label: Text('Actions')),
                           ],
-                          rows: filteredTopics
+                            rows:filteredTopics
                               .map(
                                 (topic) => DataRow(
                               cells: [
@@ -370,6 +375,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Add_Subject_Class(userId: widget.userId)),
+          );
+        },
+        child: Icon(Icons.add),
+        tooltip: 'Add Subject and Class',
       ),
     );
   }

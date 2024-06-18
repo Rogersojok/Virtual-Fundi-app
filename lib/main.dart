@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:virtualfundi/screens/welcome_screen.dart';
 //import 'package:login_signup/theme/theme.dart';
 import 'package:virtualfundi/theme/theme.dart';
+import 'database/database.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DatabaseHelper().initializeDatabase();
   runApp(const MyApp());
 }
 

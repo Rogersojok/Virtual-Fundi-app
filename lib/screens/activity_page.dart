@@ -334,17 +334,6 @@ class _ActivityPageState extends State<ActivityPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Row(
-        //   children: [
-        //     Text(
-        //       'Activity Name:',
-        //       style: TextStyle(fontWeight: FontWeight.bold),
-        //     ),
-        //     SizedBox(width: 10),
-        //     Text(activity['title'] ?? ''),
-        //     // Replace 'activityName' with the correct key from your activity map
-        //   ],
-        // ),
         SizedBox(height: 8),
         Row(
           children: [

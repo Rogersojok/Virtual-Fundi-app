@@ -25,6 +25,7 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   final _formSignInKey = GlobalKey<FormState>();
+  int? userId;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -50,11 +51,12 @@ class _SignInScreenState extends State<SignInScreen> {
       // go ahead and check is password matches
       if(user?.password == password){
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('logged in successfully')));
+        userId = await dbHelper.getUserId(email);
         // Navigate to home screen
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (e) => HomeScreen(),
+            builder: (e) => HomeScreen(userId: userId,),
           ),
         );
       }else {

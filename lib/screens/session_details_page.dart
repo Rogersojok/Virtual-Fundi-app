@@ -39,20 +39,6 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
-    /*
-    final response = await http.get(Uri.parse('http://161.97.81.168:8080/getSession/${widget.sessionId}'));
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = json.decode(response.body); // Parse as Map
-      setState(() {
-        session = [data]; // Store the single object in a list
-        print(session);
-      });
-    } else {
-      throw Exception('Failed to load data');
-    }
-
-     */
     session = (await dbHelper.getSessionById(widget.sessionId))!;
     setState(() {
       print(session.sessionName);
