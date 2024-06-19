@@ -34,7 +34,7 @@ class _ActivityPageState extends State<ActivityPage> {
   List<dynamic> dataVideoD = [];
   List<Activity> activitiesD = [];
   int sessionProgress = 0;
-  int elementIncrement = 0;
+  int totalActicities = 0;
 
   double _progress = 0.0;
   late String _videoFilePath;
@@ -101,6 +101,7 @@ class _ActivityPageState extends State<ActivityPage> {
         activities =
             activitiesD.map((activity) => activity.toMap()).toList();
         print(activities); // Handle null items in the list
+        totalActicities = activities.length;
       });
     } else {
       throw Exception('Failed to load data');
@@ -397,7 +398,6 @@ class _ActivityPageState extends State<ActivityPage> {
 
   void nextActivity() {
     setState(() {
-      elementIncrement = 0;
       currentTextIndex = 0; // Reset text index for the new activity
       if (currentIndex < activities.length - 1) {
         currentIndex++;
@@ -414,7 +414,6 @@ class _ActivityPageState extends State<ActivityPage> {
 
   void previousActivity() {
     setState(() {
-      elementIncrement = 0;
       currentTextIndex = textElementsToSkip.length - 1; // Reset text index for the new activity
       if (currentIndex > 0) {
         currentIndex--;
@@ -427,7 +426,6 @@ class _ActivityPageState extends State<ActivityPage> {
 
   void nextTextElement() {
     setState(() {
-      elementIncrement = 1;
       currentTextIndex++;
       if (currentTextIndex >= textElementsToSkip.length) {
         nextActivity();
@@ -437,7 +435,6 @@ class _ActivityPageState extends State<ActivityPage> {
 
   void previousTextElement() {
     setState(() {
-      elementIncrement = -1;
       currentTextIndex--;
       if (currentTextIndex < 0) {
         previousActivity();
@@ -480,7 +477,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       Text(
-                        ((currentIndex + elementIncrement)/ (activities.length + elementIncrement) *(100)).round().toString() + "/" + "100",
+                        currentIndex.toString() + "/" + totalActicities.toString(),
                       ),
                       const SizedBox(height: 20.0),
                       // Display either loading indicator or activity widget
@@ -525,6 +522,7 @@ class _ActivityPageState extends State<ActivityPage> {
 }
 
 class EndOfSessionPage extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -560,7 +558,7 @@ class EndOfSessionPage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "100" "/" + "100",
+                        '',
                       ),
                       const SizedBox(height: 20.0),
                       Text(

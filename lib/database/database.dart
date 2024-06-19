@@ -266,7 +266,7 @@ class DatabaseHelper {
     // Initialize the database
     WidgetsFlutterBinding.ensureInitialized();
     _database = await openDatabase(
-      join(await getDatabasesPath(), 'virtualFundiDb5.db'), //virtualFundiDb.db'
+      join(await getDatabasesPath(), 'virtualFundiDb8.db'), //virtualFundiDb.db'
       onCreate: (db, version) {
         db.execute(
           'CREATE TABLE topics(id INTEGER PRIMARY KEY, topicName TEXT, topicCode TEXT, term TEXT, cat TEXT, subject TEXT, classTaught TEXT, dateCreated TEXT)',
@@ -282,11 +282,11 @@ class DatabaseHelper {
           "CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, password TEXT, school TEXT, email TEXT)",
         );
         db.execute(
-          "CREATE TABLE class_subjects(id INTEGER PRIMARY KEY AUTOINCREMENT, class_name TEXT, subject_name TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id)), UNIQUE(class_name, subject_name, user_id)",
+          "CREATE TABLE class_subjects(id INTEGER PRIMARY KEY AUTOINCREMENT, class_name TEXT, subject_name TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id), UNIQUE(class_name, subject_name, user_id))",
         );
 
       },
-      version: 1,
+      version: 2,
     );
   }
 

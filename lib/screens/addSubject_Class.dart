@@ -19,6 +19,17 @@ class Add_Subject_Class extends StatefulWidget {
 class _Add_Subject_ClassState extends State<Add_Subject_Class> {
   final _formSignupKey = GlobalKey<FormState>();
 
+  final dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    _initDb();
+  }
+
+  Future<void> _initDb() async{
+    await dbHelper.initializeDatabase();
+  }
+
   final List<String> _subjects = ['Physics', 'Biology', 'Chemistry', 'Science']; // Replace with your subjects
   final List<String> _classes = ['P.4', 'P.5', 'P.6', 'P7', 'S.1', 'S.2', 'S.3','S.4']; // Replace with your classes
 
@@ -26,7 +37,6 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
   String? _selectedClass;
 
   Future<void> _add_subject_class() async{
-    final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
     print("................................");
     print(widget.userId);
@@ -91,7 +101,7 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
                       const SizedBox(
                         height: 40.0,
                       ),
-                      UserClassSubjectsScreen(userId: widget.userId,),
+                      showSubjectClass(userId: widget.userId,),
                       const SizedBox(
                         height: 40.0,
                       ),
@@ -187,12 +197,31 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
   }
 }
 
+class showSubjectClass extends StatefulWidget {
+  int? userId;
+  showSubjectClass({super.key, required this.userId});
 
-class UserClassSubjectsScreen extends StatelessWidget {
-  final int? userId;
+  @override
+  State<showSubjectClass> createState() => _showSubjectClassState();
+}
 
-  UserClassSubjectsScreen({required this.userId});
+class _showSubjectClassState extends State<showSubjectClass> {
 
+  final dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+  _initDb();
+  }
+
+  Future<void> _initDb() async{
+    await dbHelper.initializeDatabase();
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    _initDb();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +230,59 @@ class UserClassSubjectsScreen extends StatelessWidget {
       child: Scaffold(
 
         body: FutureBuilder<List<ClassSubject>>(
-          future: DatabaseHelper().getClassSubjectsForUser(userId),
+          future: dbHelper.getClassSubjectsForUser(widget.userId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              print(snapshot);
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No class subjects found for this user.'));
+            } else {
+              return Column(
+                children: [
+                  Expanded(
+
+                    child: ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        var classSubject = snapshot.data![index];
+                        return ListTile(
+                          title: Text('Subject: ${classSubject.subjectName}'),
+                          subtitle: Text('Class: ${classSubject.className}'),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+
+/*
+
+class UserClassSubjectsScreen extends StatelessWidget {
+  int? userId;
+
+  UserClassSubjectsScreen({required this.userId});
+
+  final dbHelper = DatabaseHelper();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 100.0,
+      child: Scaffold(
+
+        body: FutureBuilder<List<ClassSubject>>(
+          future:  dbHelper.getClassSubjectsForUser(userId),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
@@ -234,3 +315,5 @@ class UserClassSubjectsScreen extends StatelessWidget {
     );
   }
 }
+
+ */

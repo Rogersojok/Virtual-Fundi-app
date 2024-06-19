@@ -58,6 +58,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     print(user);
     // check id this user exist
     if(user?.email != null){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User Exist')));
       print('user exist');
     }else{
 
