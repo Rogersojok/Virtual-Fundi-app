@@ -122,6 +122,7 @@ class Activity {
   final String imageTitle;
   final String video;
   final String videoTitle;
+  final String realVideo;
   final DateTime createdAt;
 
   Activity({
@@ -137,6 +138,7 @@ class Activity {
     required this.imageTitle,
     required this.video,
     required this.videoTitle,
+    required this.realVideo,
     required this.createdAt,
   });
 
@@ -155,6 +157,7 @@ class Activity {
       'imageTitle': imageTitle,
       'video': video,
       'videoTitle': videoTitle,
+      'realVideo': realVideo,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -174,12 +177,13 @@ class Activity {
       imageTitle: map['imageTitle'],
       video: map['video'],
       videoTitle: map['videoTitle'],
+      realVideo: map['realVideo'],
       createdAt: DateTime.parse(map['createdAt']),
     );
   }
   @override
   String toString() {
-    return 'Activity{id: $id, title: $title, session: $session, teacherActivity: $teacherActivity, studentActivity: $studentActivity, mediaType: $mediaType, time: $time, notes: $notes, image: $image, imageTitle: $imageTitle, video: $video, videoTitle: $videoTitle, createdAt: $createdAt}';
+    return 'Activity{id: $id, title: $title, session: $session, teacherActivity: $teacherActivity, studentActivity: $studentActivity, mediaType: $mediaType, time: $time, notes: $notes, image: $image, imageTitle: $imageTitle, video: $video, videoTitle: $videoTitle, realVideo: $realVideo, createdAt: $createdAt}';
   }
 
 }
@@ -266,7 +270,7 @@ class DatabaseHelper {
     // Initialize the database
     WidgetsFlutterBinding.ensureInitialized();
     _database = await openDatabase(
-      join(await getDatabasesPath(), 'virtualFundiDb8.db'), //virtualFundiDb.db'
+      join(await getDatabasesPath(), 'virtual_Fundi.db'), //virtualFundiDb.db'
       onCreate: (db, version) {
         db.execute(
           'CREATE TABLE topics(id INTEGER PRIMARY KEY, topicName TEXT, topicCode TEXT, term TEXT, cat TEXT, subject TEXT, classTaught TEXT, dateCreated TEXT)',
@@ -275,7 +279,7 @@ class DatabaseHelper {
           'CREATE TABLE sessions(id INTEGER PRIMARY KEY, sessionName TEXT, topic INTEGER, duration TEXT DEFAULT "60", learningObjective TEXT DEFAULT "", fundibotsResources TEXT DEFAULT "", schoolResources TEXT DEFAULT "", dateCreated TEXT)',
         );
         db.execute(
-          'CREATE TABLE activities(id INTEGER PRIMARY KEY, title TEXT DEFAULT "", session INTEGER, teacherActivity TEXT DEFAULT "", studentActivity TEXT DEFAULT "", mediaType TEXT DEFAULT "", time INTEGER, notes TEXT DEFAULT "", image TEXT DEFAULT "", imageTitle TEXT DEFAULT "", video TEXT DEFAULT "", videoTitle TEXT DEFAULT "", createdAt TEXT)',
+          'CREATE TABLE activities(id INTEGER PRIMARY KEY, title TEXT DEFAULT "", session INTEGER, teacherActivity TEXT DEFAULT "", studentActivity TEXT DEFAULT "", mediaType TEXT DEFAULT "", time INTEGER, notes TEXT DEFAULT "", image TEXT DEFAULT "", imageTitle TEXT DEFAULT "", video TEXT DEFAULT "", videoTitle TEXT DEFAULT "", realVideo TEXT, createdAt TEXT)',
         );
 
         db.execute(
@@ -286,7 +290,7 @@ class DatabaseHelper {
         );
 
       },
-      version: 2,
+      version: 3,
     );
   }
 
@@ -528,6 +532,7 @@ class DatabaseHelper {
         imageTitle: maps[index]['imageTitle'],
         video: maps[index]['video'],
         videoTitle: maps[index]['videoTitle'],
+        realVideo: maps[index]['realVideo'],
         createdAt: DateTime.parse(maps[index]['createdAt']),
       );
     });

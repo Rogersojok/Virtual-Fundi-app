@@ -155,7 +155,7 @@ class _SessionsPageState extends State<SessionsPage> {
                                       width: MediaQuery.of(context).size.width * 0.4,
                                       child: Text(
                                         session['sessionName'],
-                                        textAlign: TextAlign.center,
+                                        textAlign: TextAlign.left,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),

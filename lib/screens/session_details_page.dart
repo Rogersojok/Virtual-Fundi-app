@@ -111,7 +111,7 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ActivityPage(sessionId: session.id,)),
+                            MaterialPageRoute(builder: (context) => ActivityPage(sessionId: widget.sessionId,)),
                           );
                         },
                         text: 'Next',

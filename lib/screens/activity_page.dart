@@ -35,6 +35,7 @@ class _ActivityPageState extends State<ActivityPage> {
   List<Activity> activitiesD = [];
   int sessionProgress = 0;
   int totalActicities = 0;
+  int progressValue = 0;
 
   double _progress = 0.0;
   late String _videoFilePath;
@@ -89,6 +90,7 @@ class _ActivityPageState extends State<ActivityPage> {
           imageTitle: jsonData['image_title'] ?? "",
           video: filePath ?? "",
           videoTitle: jsonData['video_title'] ?? "",
+          realVideo: jsonData['real_video'],
           createdAt: DateTime.parse(jsonData['created_at']),
         );
         await dbHelper.insertActivity(activity);
@@ -103,6 +105,7 @@ class _ActivityPageState extends State<ActivityPage> {
         print(activities); // Handle null items in the list
         totalActicities = activities.length;
       });
+
     } else {
       throw Exception('Failed to load data');
     }
@@ -114,16 +117,24 @@ class _ActivityPageState extends State<ActivityPage> {
 
     // Retrieve all topics from the database and print them
     activitiesD =
-    await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+      await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+
+    print("""""");
+    print( 'from database $activitiesD'); // Handle null items in the list
+    print("""""");
 
     setState(() {
       activities =
           activitiesD.map((activity) => activity.toMap()).toList();
-      print(activities); // Handle null items in the list
+      print("""""");
+      print('inside set state $activities'); // Handle null items in the list
+      print("""""");
     });
+
   }
 
   Future<String> downloadFile(
+
       String fileUrl, Function(int) onProgress) async {
     try {
       var httpClient = http.Client();
@@ -131,82 +142,95 @@ class _ActivityPageState extends State<ActivityPage> {
           'http://161.97.81.168:8080${fileUrl}'));
       var response = await httpClient.send(request);
 
-      // Extract filename from the URL
-      Uri uri = Uri.parse(fileUrl);
-      String fileName = uri.pathSegments.last;
-      late String filePath = '';
+      var activity_response = await http.get(Uri.parse(
+          'http://161.97.81.168:8080/getActivity/${activities[currentIndex]['id']}'));
 
-      int totalBytes = response.contentLength ?? -1;
-      int receivedBytes = 0;
+      final Map<String, dynamic> data = json.decode(activity_response.body);
 
-      if (response.statusCode == 200) {
-        //var bytes = await response.stream.toBytes();
-        var bytes = <int>[];
 
-        response.stream.listen(
-              (List<int> chunk) {
-            bytes.addAll(chunk);
-            receivedBytes += chunk.length;
+      if(data['real_video'] == "placeholder"){
+        return "placehoder video";
+      }else {
+        // Extract filename from the URL
+        Uri uri = Uri.parse(fileUrl);
+        String fileName = uri.pathSegments.last;
+        late String filePath = '';
 
-            // Calculate progress and call the onProgress function
-            double progress = (receivedBytes / totalBytes) * 100;
-            onProgress(progress.toInt()); // Pass the progress value
-          },
-          onDone: () async {
-            // When download completes, write the file to local storage
-            var appDir = await getApplicationDocumentsDirectory();
-            filePath = '${appDir.path}/$fileName';
-            File file = File(filePath);
-            await file.writeAsBytes(bytes);
-            print('filePath in download function: $filePath');
+        int totalBytes = response.contentLength ?? -1;
+        int receivedBytes = 0;
 
-            _videoFilePath = filePath;
-            print('onDone _videofilepath ${_videoFilePath}');
+        if (response.statusCode == 200) {
+          //var bytes = await response.stream.toBytes();
+          var bytes = <int>[];
+          print(response.headers);
 
-            // update the database
-            final dbHelper = DatabaseHelper();
-            await dbHelper.initializeDatabase();
+          response.stream.listen(
+                (List<int> chunk) {
+              bytes.addAll(chunk);
+              receivedBytes += chunk.length;
 
-            final UpdateActivity = Activity(
-              id: activities[currentIndex]['id'],
-              title: activities[currentIndex]['title'],
-              session: activities[currentIndex]['session'],
-              teacherActivity: activities[currentIndex]['teacherActivity'],
-              studentActivity: activities[currentIndex]['studentActivity'],
-              mediaType: activities[currentIndex]['mediaType'],
-              time: activities[currentIndex]['time'] ?? 5,
-              notes: activities[currentIndex]['notes'],
-              image: activities[currentIndex]['image'] ?? "",
-              imageTitle: activities[currentIndex]['imageTitle'] ?? "",
-              video: filePath ?? "",
-              videoTitle: activities[currentIndex]['videoTitle'] ?? "",
-              createdAt:
-              DateTime.parse(activities[currentIndex]['createdAt']),
-            );
-            // Update the activity in the database
-            await dbHelper.updateActivity(UpdateActivity);
+              // Calculate progress and call the onProgress function
+              double progress = (receivedBytes / totalBytes) * 100;
+              onProgress(progress.toInt()); // Pass the progress value
+            },
+            onDone: () async {
+              // When download completes, write the file to local storage
+              var appDir = await getApplicationDocumentsDirectory();
+              filePath = '${appDir.path}/$fileName';
+              File file = File(filePath);
+              await file.writeAsBytes(bytes);
+              print('filePath in download function: $filePath');
 
-            // update activity data
-            activitiesD =
-            await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+              _videoFilePath = filePath;
+              print('onDone _videofilepath ${_videoFilePath}');
 
-            setState(() {
-              activities =
-                  activitiesD.map((activity) => activity.toMap()).toList();
-              print(activities); // Handle null items in the list
-            });
-          },
+              // update the database
+              final dbHelper = DatabaseHelper();
+              await dbHelper.initializeDatabase();
 
-          onError: (e) {
-            throw Exception('Failed to download file: $e');
-          },
-        );
-        return filePath;
-      } else {
-        // Handle HTTP error response
-        throw Exception(
-            'Failed to download file: HTTP ${response.statusCode}');
+              final UpdateActivity = Activity(
+                id: activities[currentIndex]['id'],
+                title: activities[currentIndex]['title'],
+                session: activities[currentIndex]['session'],
+                teacherActivity: activities[currentIndex]['teacherActivity'],
+                studentActivity: activities[currentIndex]['studentActivity'],
+                mediaType: activities[currentIndex]['mediaType'],
+                time: activities[currentIndex]['time'] ?? 5,
+                notes: activities[currentIndex]['notes'],
+                image: activities[currentIndex]['image'] ?? "",
+                imageTitle: activities[currentIndex]['imageTitle'] ?? "",
+                video: filePath ?? "",
+                videoTitle: activities[currentIndex]['videoTitle'] ?? "",
+                realVideo: data['real_video'],
+                createdAt:
+                DateTime.parse(activities[currentIndex]['createdAt']),
+              );
+              // Update the activity in the database
+              await dbHelper.updateActivity(UpdateActivity);
+
+              // update activity data
+              activitiesD =
+              await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+
+              setState(() {
+                activities =
+                    activitiesD.map((activity) => activity.toMap()).toList();
+                print(activities); // Handle null items in the list
+              });
+            },
+
+            onError: (e) {
+              throw Exception('Failed to download file: $e');
+            },
+          );
+          return filePath;
+        } else {
+          // Handle HTTP error response
+          throw Exception(
+              'Failed to download file: HTTP ${response.statusCode}');
+        }
       }
+
     } catch (e) {
       // Handle other errors, such as network issues or invalid URLs
       throw Exception('Failed to download file: $e');
@@ -238,6 +262,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
   Widget _buildActivityWidget(Map<String, dynamic> activity) {
     print('currentIndex: $currentIndex'); // Using string interpolation
+    print(activities[currentIndex]['realVideo']); // Using string interpolation
 
     switch (activities[currentIndex]['mediaType']) {
       case 'text':
@@ -250,6 +275,7 @@ class _ActivityPageState extends State<ActivityPage> {
         return Container(); // Handle other media types as needed
     }
   }
+
   // List of keys or values to be skipped in each activity
   List<String> textElementsToSkip = ['teacherActivity', 'studentActivity', 'notes'];
 
@@ -360,7 +386,7 @@ class _ActivityPageState extends State<ActivityPage> {
               // ),
               SizedBox(height: 8),
               // Render video-specific UI elements
-              videoFilePath.isNotEmpty
+              videoFilePath.isNotEmpty && activities[currentIndex]['realVideo'] != "placeholder"
                   ? VideoPlayerWidget(videoFilePath: videoFilePath)
                   : ElevatedButton(
                 onPressed: () async {
@@ -385,7 +411,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     print('Download error: $error');
                   }
                 },
-                child: Text('Download Video'),
+                child:  activities[currentIndex]['realVideo'] == "placeholder" ? Text('Update placeholder video') :  Text('Download Video'),
               ),
             ],
           ),
@@ -401,11 +427,12 @@ class _ActivityPageState extends State<ActivityPage> {
       currentTextIndex = 0; // Reset text index for the new activity
       if (currentIndex < activities.length - 1) {
         currentIndex++;
+        progressValue = currentIndex + 1;
       } else {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => EndOfSessionPage(),
+            builder: (context) => EndOfSessionPage(totalActivity: totalActicities,),
           ),
         );
       }
@@ -417,6 +444,7 @@ class _ActivityPageState extends State<ActivityPage> {
       currentTextIndex = textElementsToSkip.length - 1; // Reset text index for the new activity
       if (currentIndex > 0) {
         currentIndex--;
+        progressValue = currentIndex + 1;
       } else {
         currentIndex = activities.length - 1; // Wrap around to the last activity
         // to move back to the session details
@@ -476,9 +504,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           color: Colors.blue, // Update this color as needed
                         ),
                       ),
-                      Text(
-                        currentIndex.toString() + "/" + totalActicities.toString(),
-                      ),
+                      LinearProgressWidget(value: progressValue, total: totalActicities,),
                       const SizedBox(height: 20.0),
                       // Display either loading indicator or activity widget
                       activities.isEmpty
@@ -522,6 +548,8 @@ class _ActivityPageState extends State<ActivityPage> {
 }
 
 class EndOfSessionPage extends StatelessWidget {
+  final int totalActivity;
+  EndOfSessionPage({required this.totalActivity});
 
   @override
   Widget build(BuildContext context) {
@@ -557,9 +585,7 @@ class EndOfSessionPage extends StatelessWidget {
                           color: Colors.blue, // Update this color as needed
                         ),
                       ),
-                      Text(
-                        '',
-                      ),
+                      LinearProgressWidget(value: totalActivity, total: totalActivity,),
                       const SizedBox(height: 20.0),
                       Text(
                         'Congratulations! You have completed all activities in this session.',
@@ -584,6 +610,39 @@ class EndOfSessionPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+
+class LinearProgressWidget extends StatelessWidget {
+  final int value;
+  final int total;
+
+  LinearProgressWidget({required this.value, required this.total});
+
+  double mapValueToProgress(int value) {
+    if (value < 0 || value > total) {
+      throw RangeError('Value must be between 1 and 5');
+    }
+    return (value) / total;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('Progress: $value/$total'),
+        SizedBox(height: 10),
+        LinearProgressIndicator(
+          value: mapValueToProgress(value),
+          backgroundColor: Colors.grey[200],
+          color: Colors.blue,
+          minHeight: 10,
+        ),
+      ],
     );
   }
 }
