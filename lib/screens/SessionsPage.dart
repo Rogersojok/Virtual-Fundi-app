@@ -125,19 +125,13 @@ class _SessionsPageState extends State<SessionsPage> {
                           child: DataTable(
                             columnSpacing: 30.0,
                             columns: [
-                              DataColumn(label: Text('No.', textAlign: TextAlign.center)),
                               DataColumn(label: Text('Session Name', textAlign: TextAlign.center)),
                               DataColumn(label: Text('Start Session', textAlign: TextAlign.center)),
                             ],
                             rows: sessions.map((session) {
                               int index = sessions.indexOf(session) + 1; // Calculate the index
                               return DataRow(cells: [
-                                DataCell(
-                                  Text(
-                                    '$index',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
+
                                 DataCell(
                                   GestureDetector(
                                     onTap: (){

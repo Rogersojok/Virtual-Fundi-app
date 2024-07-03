@@ -157,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(
                         height: 20.0,
                       ),
+                      /*
                       Row(
                         children: [
                           Expanded(
@@ -220,12 +221,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
+
+                       */
                       const SizedBox(
                         height: 20.0,
                       ),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
+                          columnSpacing: 11,
                           columns: [
                             DataColumn(label: Text('Topic')),
                             DataColumn(label: Text('Class')),
@@ -237,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 (topic) => DataRow(
                               cells: [
                                 DataCell(Container(
-                                  width: 100, // Set a specific width for the Container
+                                  width: 120, // Set a specific width for the Container
                                   child: Text(
                                     topic['topicName']!,
                                     overflow: TextOverflow.ellipsis, // Allow text to overflow with ellipsis
@@ -279,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         );
                                       },
-                                      text: 'Start',
+                                      text: 'Start Class',
                                     ),
                                   ],
                                 )),

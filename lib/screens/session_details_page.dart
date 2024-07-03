@@ -86,26 +86,34 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
                       // Session details
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Html(data:'<b>Resources Provided by Fundi Bots</b>: ${session.fundibotsResources}'),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Html(data: '<b>Resources Provided by School</b>: ${session.schoolResources}'),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Row(
                           children: [
                             Icon(Icons.access_time),
                             SizedBox(width: 5),
-                            Text('Duration: ${session.duration} minutes'),
+                            //Text('Duration: ${session.duration} minutes'),
+                            Text(
+                              'Duration: ${session.duration} minutes',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold, // Replace with your desired color
+                              ),
+                            )
                           ],
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data:'Learning Objectives: ${session.learningObjective}'),
+                        child: Html(data:'<b>Learning Objectives</b>: ${session.learningObjective}'),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data:'Resources Provided by Fundi Bots: ${session.fundibotsResources}'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data: 'Resources Provided by School: ${session.schoolResources}'),
-                      ),
+
+
                       const SizedBox(height: 20.0),
                       AnimatedElevatedButton(
                         onPressed: () {

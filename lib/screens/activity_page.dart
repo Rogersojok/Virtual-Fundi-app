@@ -41,6 +41,7 @@ class _ActivityPageState extends State<ActivityPage> {
   late String _videoFilePath;
   late final Connectivity _connectivity;
 
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +64,23 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
    */
+
+  String convertToReadableFormat(String text) {
+    if (text.isEmpty) return text;
+
+    final buffer = StringBuffer();
+    buffer.write(text[0].toUpperCase()); // Capitalize the first letter
+
+    for (int i = 1; i < text.length; i++) {
+      if (text[i].toUpperCase() == text[i]) {
+        buffer.write(' '); // Add a space before uppercase letters
+      }
+      buffer.write(text[i]);
+    }
+
+    return buffer.toString();
+  }
+
 
   Future<void> fetchData() async {
     final dbHelper = DatabaseHelper();
@@ -103,7 +121,7 @@ class _ActivityPageState extends State<ActivityPage> {
         activities =
             activitiesD.map((activity) => activity.toMap()).toList();
         print(activities); // Handle null items in the list
-        totalActicities = activities.length;
+
       });
 
     } else {
@@ -130,7 +148,7 @@ class _ActivityPageState extends State<ActivityPage> {
       print('inside set state $activities'); // Handle null items in the list
       print("""""");
     });
-
+    totalActicities = activities.length;
   }
 
   Future<String> downloadFile(
@@ -296,13 +314,14 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Widget _buildRow(String label, String value) {
+    final customLabel = convertToReadableFormat(label);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            customLabel,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 5),
@@ -496,14 +515,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20.0),
-                      Text(
-                        activities[currentIndex]['title'],
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue, // Update this color as needed
-                        ),
-                      ),
+
                       LinearProgressWidget(value: progressValue, total: totalActicities,),
                       const SizedBox(height: 20.0),
                       // Display either loading indicator or activity widget
@@ -599,7 +611,7 @@ class EndOfSessionPage extends StatelessWidget {
                           Navigator.pop(context);
                           Navigator.pop(context);
                         },
-                        text: 'Back to Session',
+                        text: 'Back',
                       ),
                       const SizedBox(height: 20.0),
                     ],
@@ -622,11 +634,13 @@ class LinearProgressWidget extends StatelessWidget {
 
   LinearProgressWidget({required this.value, required this.total});
 
-  double mapValueToProgress(int value) {
-    if (value < 0 || value > total) {
+  double mapValueToProgress(int value, int t) {
+    print('value $value');
+    print('total $t');
+    if (value < 0 || value > t) {
       throw RangeError('Value must be between 1 and 5');
     }
-    return (value) / total;
+    return (value) / t;
   }
 
   @override
@@ -637,7 +651,7 @@ class LinearProgressWidget extends StatelessWidget {
         Text('Progress: $value/$total'),
         SizedBox(height: 10),
         LinearProgressIndicator(
-          value: mapValueToProgress(value),
+          value: mapValueToProgress(value, total),
           backgroundColor: Colors.grey[200],
           color: Colors.blue,
           minHeight: 10,
