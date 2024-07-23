@@ -6,7 +6,6 @@ import 'package:virtualfundi/theme/theme.dart';
 import 'package:virtualfundi/widgets/custom_scaffold.dart';
 import 'package:virtualfundi/widgets/welcome_button.dart';
 
-
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({Key? key});
 
@@ -30,15 +29,24 @@ class WelcomeScreen extends StatelessWidget {
                       TextSpan(
                         text: 'Welcome To!\n',
                         style: TextStyle(
-                          fontSize: 45.0,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          fontSize: 30.0,
+                          //fontWeight: FontWeight.w600,
+                          color: Colors.orange,
                         ),
                       ),
                       TextSpan(
-                        text: '\nThe Virtual Fundi',
+                        text: '\nVirtual Fundi',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 80,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(2.0, 2.0),
+                              blurRadius: 3.0,
+                              color: Colors.orange,
+                            ),
+                          ],
                         ),
                       ),
                     ],
