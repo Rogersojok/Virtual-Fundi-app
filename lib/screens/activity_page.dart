@@ -1,3 +1,5 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import '../theme/theme.dart';
@@ -152,9 +154,7 @@ class _ActivityPageState extends State<ActivityPage> {
     totalActicities = activities.length;
   }
 
-  Future<String> downloadFile(
-
-      String fileUrl, Function(int) onProgress) async {
+  Future<String> downloadFile(String fileUrl, Function(int) onProgress) async {
     try {
       var httpClient = http.Client();
       var request = http.Request('GET', Uri.parse(
@@ -165,10 +165,11 @@ class _ActivityPageState extends State<ActivityPage> {
           'http://161.97.81.168:8080/getActivity/${activities[currentIndex]['id']}'));
 
       final Map<String, dynamic> data = json.decode(activity_response.body);
+      print(activity_response.body);
 
 
       if(data['real_video'] == "placeholder"){
-        return "placehoder video";
+        return "placeholder video";
       }else {
         // Extract filename from the URL
         Uri uri = Uri.parse(fileUrl);
@@ -191,7 +192,8 @@ class _ActivityPageState extends State<ActivityPage> {
               // Calculate progress and call the onProgress function
               double progress = (receivedBytes / totalBytes) * 100;
               onProgress(progress.toInt()); // Pass the progress value
-            },
+              // Show progress in a ScaffoldMessenger
+              },
             onDone: () async {
               // When download completes, write the file to local storage
               var appDir = await getApplicationDocumentsDirectory();
@@ -415,8 +417,11 @@ class _ActivityPageState extends State<ActivityPage> {
                     String filePath = await downloadFile(
                         dataVideoD[currentIndex]['video'],
                             (progress) {
+                              setState(() {
+                                progressD = progress;
+                              });
                           print(
-                              '${dataVideoD[currentIndex]['video']} Download progress: $progress');
+                              '${dataVideoD[currentIndex]['video']} Download progress: $progressD');
                         });
                     // Once download is complete, update the video file path and start initializing the video player
                     print('after update path $filePath');
@@ -431,7 +436,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     print('Download error: $error');
                   }
                 },
-                child:  activities[currentIndex]['realVideo'] == "placeholder" ? Text('Update placeholder video') :  Text('Download Video'),
+                child:  activities[currentIndex]['realVideo'] == "placeholder" ? Text('Update placeholder video $progressD') :  Text('Download Video $progressD'),
               ),
             ],
           ),
