@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../theme/theme.dart';
 import '../widgets/custom_scaffold.dart';
 import 'dart:convert'; // for convert response to json
 import 'package:http/http.dart' as http; // Import http package for making api request.
 import 'package:video_player/video_player.dart';
 import 'package:virtualfundi/widgets/video_player_widget.dart';
-import 'package:flutter_html/flutter_html.dart';
+//import 'package :flutter_html/flutter_html.dart';
 import '../database/database.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';

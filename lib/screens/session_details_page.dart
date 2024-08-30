@@ -96,12 +96,12 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Row(
                           children: [
-                            Icon(Icons.access_time),
-                            SizedBox(width: 5),
+                            const Icon(Icons.access_time),
+                            const SizedBox(width: 5),
                             //Text('Duration: ${session.duration} minutes'),
                             Text(
                               'Duration: ${session.duration} minutes',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold, // Replace with your desired color
                               ),
                             )
