@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -6,12 +5,16 @@ class AnimatedElevatedButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
   final Duration animationDuration;
+  final Color color; // New parameter for button color
+  final Color textColor; // New parameter for text color
 
   const AnimatedElevatedButton({
     Key? key,
     required this.text,
     required this.onPressed,
     this.animationDuration = const Duration(milliseconds: 300),
+    this.color = Colors.blue, // Default color
+    this.textColor = Colors.white, // Default text color
   }) : super(key: key);
 
   @override
@@ -49,13 +52,11 @@ class _AnimatedElevatedButtonState extends State<AnimatedElevatedButton> {
       duration: widget.animationDuration,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _isClicked ? Colors.grey : Colors.blue,
-          foregroundColor: _isClicked ? Colors.black : Colors.white,
+          foregroundColor: _isClicked ? Colors.black : widget.textColor, backgroundColor: _isClicked ? Colors.grey : widget.color, // Text color
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          padding: EdgeInsets.symmetric(
-              horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
         onPressed: _animateButton,
         child: Text(

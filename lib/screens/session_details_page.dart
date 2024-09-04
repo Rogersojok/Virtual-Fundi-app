@@ -19,13 +19,36 @@ class SessionDetailsPage extends StatefulWidget {
 }
 
 class _SessionDetailsPageState extends State<SessionDetailsPage> {
-
   late final session;
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollIndicator = false;
+  double _viewportHeight = 0;
+  double _contentHeight = 0;
 
   @override
   void initState() {
     super.initState();
     initializeDatabaseAndFetchData();
+    _scrollController.addListener(() {
+      setState(() {
+        _showScrollIndicator = _scrollController.hasClients &&
+            _scrollController.offset < _scrollController.position.maxScrollExtent - 50;
+      });
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewportHeight = MediaQuery.of(context).size.height;
+      final contentHeight = _scrollController.position.maxScrollExtent + viewportHeight;
+      setState(() {
+        _viewportHeight = viewportHeight;
+        _contentHeight = contentHeight;
+        _showScrollIndicator = _contentHeight > _viewportHeight;
+      });
+    });
   }
 
   Future<void> initializeDatabaseAndFetchData() async {
@@ -35,7 +58,6 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
   }
 
   Future<void> fetchDataT() async {
-
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
@@ -44,98 +66,104 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
       print(session.sessionName);
       print("-------------session details above------------------");
     });
-
   }
-
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScaffold(
-        child: Column(
-          children: [
-            const Expanded(
-              flex: 1,
-              child: SizedBox(height: 10),
-            ),
-            Expanded(
-              flex: 7,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(25.0, 20.0, 25.0, 20.0),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40.0),
-                    topRight: Radius.circular(40.0),
+    return CustomScaffold(
+      title: widget.sessionName,
+      onBackPressed: () => Navigator.pop(context),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ' ${widget.sessionName}',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: lightColorScheme.primary,
+                    ),
                   ),
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 10.0),
+                  // Session details
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Html(data: '<b>Resources Provided by Fundi Bots</b>: ${session.fundibotsResources}'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Html(data: '<b>Resources Provided by School</b>: ${session.schoolResources}'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.access_time),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Duration: ${session.duration} minutes',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Html(data: '<b>Learning Objectives</b>: ${session.learningObjective}'),
+                  ),
+                  const SizedBox(height: 80.0), // Additional space for the scroll indicator
+                  AnimatedElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ActivityPage(sessionId: widget.sessionId,)),
+                      );
+                    },
+                    text: 'Next',
+                  ),
+                  const SizedBox(height: 20.0),
+                ],
+              ),
+            ),
+          ),
+          if (_showScrollIndicator)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(height: 20.0),
                       Text(
-                        ' ${widget.sessionName}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: lightColorScheme.primary,
+                        'Scroll down for more',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 20.0),
-                      // Session details
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data:'<b>Resources Provided by Fundi Bots</b>: ${session.fundibotsResources}'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data: '<b>Resources Provided by School</b>: ${session.schoolResources}'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Row(
-                          children: [
-                            Icon(Icons.access_time),
-                            SizedBox(width: 5),
-                            //Text('Duration: ${session.duration} minutes'),
-                            Text(
-                              'Duration: ${session.duration} minutes',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold, // Replace with your desired color
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Html(data:'<b>Learning Objectives</b>: ${session.learningObjective}'),
-                      ),
-
-
-                      const SizedBox(height: 20.0),
-                      AnimatedElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ActivityPage(sessionId: widget.sessionId,)),
-                          );
-                        },
-                        text: 'Next',
-                      ),
-                      const SizedBox(height: 20.0),
+                      const SizedBox(width: 8.0),
+                      Icon(Icons.arrow_downward, color: Colors.white),
                     ],
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
-
-
   }
 }
-

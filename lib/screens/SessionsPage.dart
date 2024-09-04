@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:virtualfundi/screens/signup_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../theme/theme.dart';
 import '../widgets/custom_scaffold.dart';
-import 'session_details_page.dart'; // Import the session details page
-import 'dart:convert'; // for convert response to json
-import 'package:http/http.dart' as http; // Import http package for making api request.
 import '../database/database.dart';
+import 'session_details_page.dart';
+import 'home_screen.dart'; // Import the HomeScreen
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../utills/animateAButton.dart';
 
 class SessionsPage extends StatefulWidget {
   final String topic;
@@ -27,7 +26,6 @@ class _SessionsPageState extends State<SessionsPage> {
   void initState() {
     super.initState();
     _connectivity = Connectivity();
-    //_checkInternetAndFetchData();
     fetchData();
     fetchLocalData();
   }
@@ -42,7 +40,6 @@ class _SessionsPageState extends State<SessionsPage> {
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
 
-      // Convert JSON data to Session objects and insert into the database
       for (var jsonData in data) {
         final session = Session(
           id: jsonData['id'],
@@ -57,14 +54,10 @@ class _SessionsPageState extends State<SessionsPage> {
         await dbHelper.insertSession(session);
       }
 
-      // Retrieve all topics from the database and print them
       final sessionsData = await dbHelper.retrieveAllSession(widget.topicId);
-      //print(sessionsData);
 
       setState(() {
         sessions = sessionsData.map((session) => session.toMap()).toList();
-        //print(sessions);
-        print("------------------session page------------------------------");
       });
     } else {
       throw Exception('Failed to load data');
@@ -75,146 +68,113 @@ class _SessionsPageState extends State<SessionsPage> {
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
-    // Retrieve all sessions under a topic from the database and print them
     final sessionsData = await dbHelper.retrieveAllSession(widget.topicId);
-    //print(sessionsData);
 
     setState(() {
       sessions = sessionsData.map((session) => session.toMap()).toList();
-      //print(sessions);
-      print("------------------session page------------------------------");
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScaffold(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: 10),
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.all(20.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40.0),
-                    topRight: Radius.circular(40.0),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(height: 20.0),
-                      Text(
-                        widget.topic,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: lightColorScheme.primary,
-                        ),
+    return CustomScaffold(
+      title: 'Sessions',
+      onBackPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(userId: 1), // Replace with actual userId
+          ),
+        );
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            children: [
+              SizedBox(height: 20.0),
+              Expanded(
+                child: Container(
+                  color: Colors.grey[100], // Match the background color of HomeScreen
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 16,
+                      headingRowColor: MaterialStateColor.resolveWith(
+                              (states) => Colors.blueGrey.shade50),
+                      dataRowColor: MaterialStateColor.resolveWith(
+                              (states) => Colors.white),
+                      headingTextStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
-                      SizedBox(height: 20.0),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width,
-                          child: DataTable(
-                            columnSpacing: 30.0,
-                            columns: [
-                              DataColumn(label: Text('Session Name', textAlign: TextAlign.center)),
-                              DataColumn(label: Text('Start Session', textAlign: TextAlign.center)),
-                            ],
-                            rows: sessions.map((session) {
-                              int index = sessions.indexOf(session) + 1; // Calculate the index
-                              return DataRow(cells: [
-
-                                DataCell(
-                                  GestureDetector(
-                                    onTap: (){
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SessionDetailsPage(
-                                            sessionName: session['sessionName']!,
-                                            sessionId: session['id']!,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      width: MediaQuery.of(context).size.width * 0.4,
-                                      child: Text(
-                                        session['sessionName'],
-                                        textAlign: TextAlign.left,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Container(
-                                    width: MediaQuery.of(context).size.width * 0.3,
-                                    child: AnimatedElevatedButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => SessionDetailsPage(
-                                              sessionName: session['sessionName']!,
-                                              sessionId: session['id']!,
-                                            ),
-                                          ),
-                                        );
-                                      },
-
-                                      text:'View',
-                                      ),
-                                    ),
-                                  ),
-                              ]);
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 25.0),
-                      Divider(
-                        thickness: 0.7,
-                        color: Colors.grey.withOpacity(0.5),
-                      ),
-                      SizedBox(height: 25.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          // IconButtons or Icons for social media login
-                        ],
-                      ),
-                      SizedBox(height: 25.0),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SignUpScreen(),
+                      columns: [
+                        DataColumn(label: Text('Session Name')),
+                        DataColumn(label: Text('Start Session')),
+                      ],
+                      rows: sessions.map((session) {
+                        return DataRow(cells: [
+                          DataCell(
+                            Container(
+                              width: constraints.maxWidth * 0.4, // 40% of the screen width
+                              child: Text(
+                                session['sessionName']!,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
-                          );
-                        },
-                        child: Text(
-                          '',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: lightColorScheme.primary),
-                        ),
-                      ),
-                      SizedBox(height: 20.0),
-                    ],
+                          ),
+                          DataCell(
+                            Container(
+                              width: constraints.maxWidth * 0.1, // 10% of the screen width
+                              child: _buildStyledButton(
+                                text: 'View',
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SessionDetailsPage(
+                                        sessionName: session['sessionName']!,
+                                        sessionId: session['id']!,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ]);
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // Function to build styled buttons
+  Widget _buildStyledButton({
+    required String text,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blueAccent,
+        shadowColor: Colors.grey.withOpacity(0.5),
+        elevation: 5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
     );
   }
