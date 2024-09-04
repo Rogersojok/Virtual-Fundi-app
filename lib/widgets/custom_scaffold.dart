@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 
 class CustomScaffold extends StatelessWidget {
   final Widget? child;
+  final String title;
+  final VoidCallback? onBackPressed;
+  final VoidCallback? onForwardPressed;
 
   const CustomScaffold({
     Key? key,
     this.child,
+    this.title = '',
+    this.onBackPressed,
+    this.onForwardPressed,
   }) : super(key: key);
 
   @override
@@ -14,29 +20,13 @@ class CustomScaffold extends StatelessWidget {
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // Gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.blue,
-                  Colors.purple,
-                ],
-              ),
-            ),
-            width: double.infinity,
-            height: double.infinity,
-          ),
           SafeArea(
             child: Column(
               children: [
-                // Custom header
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   alignment: Alignment.center,
-                  height: 100,
+                  height: 80,
                   decoration: const BoxDecoration(
                     color: Color(0xFF003366),
                     border: Border(
@@ -46,39 +36,30 @@ class CustomScaffold extends StatelessWidget {
                       ),
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Row(
                     children: [
-                      Text(
-                        '', // Placeholder title
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      if (onBackPressed != null)
+                        IconButton(
+                          icon: Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: onBackPressed,
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '', // Placeholder elapsed time
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            title,
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Text(
-                            '', // Placeholder subtitle
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFFFD700),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
+                      if (onForwardPressed != null)
+                        IconButton(
+                          icon: Icon(Icons.arrow_forward, color: Colors.white),
+                          onPressed: onForwardPressed,
+                        ),
                     ],
                   ),
                 ),

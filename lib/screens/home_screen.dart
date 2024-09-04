@@ -9,7 +9,6 @@ import 'signup_screen.dart';
 import '../theme/theme.dart';
 import '../database/database.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../utills/animateAButton.dart';
 
 class HomeScreen extends StatefulWidget {
   final int? userId;
@@ -94,113 +93,111 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100], // Ensure the Scaffold background color is set
       body: CustomScaffold(
-        child: Container(
-          color: Colors.white, // Background color of the entire screen
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20.0),
-                    Container(
-                      color: Colors.grey[100], // Light grey background for the form area
-                      padding: const EdgeInsets.all(16.0), // Padding for better layout
-                      margin: const EdgeInsets.symmetric(horizontal: 16.0), // Margin for centering
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: constraints.maxWidth,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Column(
+              children: [
+                const SizedBox(height: 20.0),
+                Expanded(
+                  child: Container(
+                    color: Colors.grey[100], // Set background color for the table area
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        columnSpacing: 16,
+                        headingRowColor: MaterialStateColor.resolveWith(
+                                (states) => Colors.blueGrey.shade50),
+                        dataRowColor: MaterialStateColor.resolveWith(
+                                (states) => Colors.white),
+                        headingTextStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                        child: DataTable(
-                          columnSpacing: 16, // Increased spacing for readability
-                          headingRowColor: MaterialStateColor.resolveWith((states) => Colors.blueGrey.shade50),
-                          dataRowColor: MaterialStateColor.resolveWith((states) => Colors.white),
-                          headingTextStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                        columns: const [
+                          DataColumn(label: Text('Topic')),
+                          DataColumn(label: Text('Class')),
+                          DataColumn(label: Text('Term')),
+                          DataColumn(label: Text('Actions')),
+                        ],
+                        rows: filteredTopics
+                            .map((topic) => DataRow(cells: [
+                          DataCell(
+                            Container(
+                              width: constraints.maxWidth * 0.4, // 40% of the screen width for Topic column
+                              child: Text(
+                                topic['topicName']!,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
                           ),
-                          columns: const [
-                            DataColumn(label: Text('Topic')),
-                            DataColumn(label: Text('Class')),
-                            DataColumn(label: Text('Term')),
-                            DataColumn(label: Text('Actions')),
-                          ],
-                          rows: filteredTopics.map((topic) => DataRow(cells: [
-                            DataCell(
-                              Container(
-                                width: 200, // Fixed width for Topic column
-                                child: Text(
-                                  topic['topicName']!,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: 16),
+                          DataCell(
+                            Container(
+                              width: constraints.maxWidth * 0.1, // 10% of the screen width for Class column
+                              child: Text(
+                                topic['classTaught']!,
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Container(
+                              width: constraints.maxWidth * 0.1, // 10% of the screen width for Term column
+                              child: Text(
+                                topic['term']!,
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                _buildStyledButton(
+                                  text: 'Prepare',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            SessionsPage(
+                                              topic: topic['topicName'],
+                                              topicId: topic['id'],
+                                            ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
-                            ),
-                            DataCell(
-                              Container(
-                                width: 100, // Fixed width for Class column
-                                child: Text(
-                                  topic['classTaught']!,
-                                  style: TextStyle(fontSize: 14),
+                                const SizedBox(width: 8.0),
+                                _buildStyledButton(
+                                  text: 'Start Class',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            SessionsPage(
+                                              topic: topic['topicName']!,
+                                              topicId: topic['id']!,
+                                            ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
+                              ],
                             ),
-                            DataCell(
-                              Container(
-                                width: 100, // Fixed width for Term column
-                                child: Text(
-                                  topic['term']!,
-                                  style: TextStyle(fontSize: 14),
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Row(
-                                children: [
-                                  _buildStyledButton(
-                                    text: 'Prepare',
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SessionsPage(
-                                            topic: topic['topicName'],
-                                            topicId: topic['id'],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(width: 8.0),
-                                  _buildStyledButton(
-                                    text: 'Start Class',
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SessionsPage(
-                                            topic: topic['topicName']!,
-                                            topicId: topic['id']!,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ])).toList(),
-                        ),
+                          ),
+                        ]))
+                            .toList(),
                       ),
                     ),
-                    const SizedBox(height: 25.0),
-                  ],
+                  ),
                 ),
-              );
-            },
-          ),
+              ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -212,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        backgroundColor: Colors.blueAccent, // Blue background for FAB
+        backgroundColor: Colors.green,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
@@ -230,14 +227,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.white, // Text color
-        backgroundColor: Colors.blueAccent, // Button color
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blueAccent,
         shadowColor: Colors.grey.withOpacity(0.5),
         elevation: 5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
       child: Text(
         text,
