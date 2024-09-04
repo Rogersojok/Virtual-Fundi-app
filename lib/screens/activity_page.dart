@@ -1,5 +1,6 @@
 
-
+import 'dart:async';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:flutter/material.dart';
 import '../theme/theme.dart';
 import '../widgets/custom_scaffold.dart';
@@ -13,6 +14,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utills/animateAButton.dart';
+import 'package:disk_space_plus/disk_space_plus.dart';
 
 // class for data fetched from the database
 
@@ -31,41 +33,95 @@ class _ActivityPageState extends State<ActivityPage> {
   int currentTextIndex = 0;
   int progressD = 0;
   late VideoPlayerController _controller;
-  late Future<void> _initializeVideoPlayerFuture;
   late String filePath = "";
   List<dynamic> dataVideoD = [];
   List<Activity> activitiesD = [];
   int sessionProgress = 0;
   int totalActicities = 0;
   int progressValue = 0;
-
-  double _progress = 0.0;
+  String network = "Offline";
   late String _videoFilePath;
-  late final Connectivity _connectivity;
+  Activity? currentActivity;
+  double? freeSpace;
+
+  late StreamSubscription<List<ConnectivityResult>> streamSubscription;
+
 
 
   @override
   void initState() {
     super.initState();
-    _connectivity = Connectivity();
-    // _checkInternetAndFetchData();
+    //_checkInternetAndFetchData();
+    internet2();
     fetchData();
     fetchLocalData();
+    checkDiskSpace();
+
+
+
+    //setActivity();
+
   }
 
-  /*
-  Future<void> _checkInternetAndFetchData() async {
-    var connectivityResult = await _connectivity.checkConnectivity();
-    if (connectivityResult.contains(ConnectivityResult.none)) {
-      fetchData();
-      print("-------------------------- internet -------------");
-    } else {
-      fetchLocalData();
-      print("--------------------------no internet -------------");
+  void setActivity(){
+    currentActivity = Activity(
+      id: activities[currentIndex]['id'],
+      title: activities[currentIndex]['title'],
+      session: activities[currentIndex]['session'],
+      teacherActivity: activities[currentIndex]['teacherActivity'],
+      studentActivity: activities[currentIndex]['studentActivity'],
+      mediaType: activities[currentIndex]['mediaType'],
+      time: activities[currentIndex]['time'] ?? 5,
+      notes: activities[currentIndex]['notes'],
+      image: activities[currentIndex]['image'] ?? "",
+      imageTitle: activities[currentIndex]['imageTitle'] ?? "",
+      video: "",
+      videoTitle: activities[currentIndex]['videoTitle'] ?? "",
+      realVideo: 'real_video',
+      createdAt:
+      DateTime.parse(activities[currentIndex]['createdAt']),
+    );
+
+    print('Set current activity:  $currentActivity');
+  }
+
+  void _checkInternetAndFetchData() {
+    streamSubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
+      if(result.contains(ConnectivityResult.mobile) || result.contains(ConnectivityResult.wifi)){
+        network = "Online";
+        print("Online");
+      }else{
+        network = "Offline";
+        print("Offline");
+      }
+    });
+  }
+
+  Future<void> checkDiskSpace() async {
+    try {
+      freeSpace = await DiskSpacePlus.getFreeDiskSpace;
+      if (freeSpace != null) {
+        print('Free disk space: $freeSpace MB');
+      } else {
+        print('Failed to get free disk space');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
-   */
+
+  void internet2() async{
+    bool result = await InternetConnection().hasInternetAccess;
+    if(result == true ){
+      network = "Online";
+      print("Online");
+    }else{
+      network = "Offline";
+      print("Offline");
+    }
+    print(result);
+  }
 
   String convertToReadableFormat(String text) {
     if (text.isEmpty) return text;
@@ -123,7 +179,7 @@ class _ActivityPageState extends State<ActivityPage> {
         activities =
             activitiesD.map((activity) => activity.toMap()).toList();
         print(activities); // Handle null items in the list
-
+        setActivity();
       });
 
     } else {
@@ -132,6 +188,8 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Future<void> fetchLocalData() async {
+
+
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
@@ -149,11 +207,17 @@ class _ActivityPageState extends State<ActivityPage> {
       print("""""");
       print('inside set state $activities'); // Handle null items in the list
       print("""""");
+      internet2();
+      setActivity();
     });
     totalActicities = activities.length;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Disk space: $freeSpace')));
   }
 
+
   Future<String> downloadFile(String fileUrl, Function(int) onProgress) async {
+
+
     try {
       var httpClient = http.Client();
       var request = http.Request('GET', Uri.parse(
@@ -236,6 +300,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 activities =
                     activitiesD.map((activity) => activity.toMap()).toList();
                 print(activities); // Handle null items in the list
+                internet2();
               });
             },
 
@@ -245,6 +310,41 @@ class _ActivityPageState extends State<ActivityPage> {
           );
           return filePath;
         } else {
+          // reset the database
+          final dbHelper = DatabaseHelper();
+          await dbHelper.initializeDatabase();
+
+          final UpdateActivity = Activity(
+            id: activities[currentIndex]['id'],
+            title: activities[currentIndex]['title'],
+            session: activities[currentIndex]['session'],
+            teacherActivity: activities[currentIndex]['teacherActivity'],
+            studentActivity: activities[currentIndex]['studentActivity'],
+            mediaType: activities[currentIndex]['mediaType'],
+            time: activities[currentIndex]['time'] ?? 5,
+            notes: activities[currentIndex]['notes'],
+            image: activities[currentIndex]['image'] ?? "",
+            imageTitle: activities[currentIndex]['imageTitle'] ?? "",
+            video: "",
+            videoTitle: activities[currentIndex]['videoTitle'] ?? "",
+            realVideo: data['real_video'],
+            createdAt:
+            DateTime.parse(activities[currentIndex]['createdAt']),
+          );
+          // Update the activity in the database
+          await dbHelper.updateActivity(UpdateActivity);
+
+          // update activity data
+          activitiesD =
+          await dbHelper.retrieveActivitiesBySession(widget.sessionId);
+
+          setState(() {
+            activities =
+                activitiesD.map((activity) => activity.toMap()).toList();
+            print(activities); // Handle null items in the list
+            internet2();
+            setActivity();
+          });
           // Handle HTTP error response
           throw Exception(
               'Failed to download file: HTTP ${response.statusCode}');
@@ -253,9 +353,14 @@ class _ActivityPageState extends State<ActivityPage> {
 
     } catch (e) {
       // Handle other errors, such as network issues or invalid URLs
+      setState(() {
+        setActivity();
+      });
       throw Exception('Failed to download file: $e');
+
     }
   }
+
 
   Future<String> downloadImage(String imageUrl) async {
     var httpClient = http.Client();
@@ -407,8 +512,9 @@ class _ActivityPageState extends State<ActivityPage> {
               // ),
               SizedBox(height: 8),
               // Render video-specific UI elements
+
               videoFilePath.isNotEmpty && activities[currentIndex]['realVideo'] != "placeholder"
-                  ? VideoPlayerWidget(videoFilePath: videoFilePath)
+                  ? VideoPlayerWidget(videoFilePath: videoFilePath, activity: currentActivity,)
                   : ElevatedButton(
                 onPressed: () async {
                   try {
@@ -429,9 +535,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       print('setState update path $videoFilePath');
                     });
 
-                    await _initializeVideoPlayerFuture;
                   } catch (error) {
-                    // Handle download error if needed
                     print('Download error: $error');
                   }
                 },
@@ -460,6 +564,9 @@ class _ActivityPageState extends State<ActivityPage> {
           ),
         );
       }
+      _checkInternetAndFetchData();
+      progressD = 0;
+      setActivity();
     });
   }
 
@@ -473,6 +580,9 @@ class _ActivityPageState extends State<ActivityPage> {
         currentIndex = activities.length - 1; // Wrap around to the last activity
         // to move back to the session details
       }
+      internet2();
+      progressD = 0;
+      setActivity();
     });
   }
 
@@ -482,6 +592,7 @@ class _ActivityPageState extends State<ActivityPage> {
       if (currentTextIndex >= textElementsToSkip.length) {
         nextActivity();
       }
+      internet2();
     });
   }
 
@@ -491,6 +602,7 @@ class _ActivityPageState extends State<ActivityPage> {
       if (currentTextIndex < 0) {
         previousActivity();
       }
+      _checkInternetAndFetchData();
     });
   }
 
@@ -521,6 +633,13 @@ class _ActivityPageState extends State<ActivityPage> {
                     children: [
                       const SizedBox(height: 20.0),
 
+                      Text(network,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue),
+                        ),
+                      const SizedBox(height: 20.0),
                       LinearProgressWidget(value: progressValue, total: totalActicities,),
                       const SizedBox(height: 20.0),
                       // Display either loading indicator or activity widget
