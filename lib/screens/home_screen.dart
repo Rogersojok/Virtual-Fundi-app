@@ -35,6 +35,16 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchLocalData();
   }
 
+  @override
+  void didPopNext() {
+    // This is called when user comes back to this page
+    print("+++++++++++++++++++++++++++++++++++++");
+    print("Came back to MyPage");
+    fetchData();
+    fetchLocalData();
+  }
+
+
   Future<void> fetchData() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
@@ -95,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100], // Ensure the Scaffold background color is set
       body: CustomScaffold(
+        title: 'Topics',
         child: LayoutBuilder(
           builder: (context, constraints) {
             return Column(
@@ -106,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
-                        columnSpacing: 16,
+                        columnSpacing: 0,
                         headingRowColor: MaterialStateColor.resolveWith(
                                 (states) => Colors.blueGrey.shade50),
                         dataRowColor: MaterialStateColor.resolveWith(

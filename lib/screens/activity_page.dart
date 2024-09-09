@@ -190,7 +190,6 @@ class _ActivityPageState extends State<ActivityPage> {
 
   Future<void> fetchLocalData() async {
 
-
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
@@ -212,13 +211,11 @@ class _ActivityPageState extends State<ActivityPage> {
       setActivity();
     });
     totalActicities = activities.length;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Disk space: $freeSpace')));
+    //ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Disk space: $freeSpace')));
   }
 
 
   Future<String> downloadFile(String fileUrl, Function(int) onProgress) async {
-
-
     try {
       var httpClient = http.Client();
       var request = http.Request('GET', Uri.parse(
@@ -230,7 +227,6 @@ class _ActivityPageState extends State<ActivityPage> {
 
       final Map<String, dynamic> data = json.decode(activity_response.body);
       print(activity_response.body);
-
 
       if(data['real_video'] == "placeholder"){
         return "placeholder video";
@@ -540,8 +536,19 @@ class _ActivityPageState extends State<ActivityPage> {
                     print('Download error: $error');
                   }
                 },
-                child:  activities[currentIndex]['realVideo'] == "placeholder" ? Text('Update placeholder video $progressD') :  Text('Download Video $progressD'),
-              ),
+                child:  activities[currentIndex]['realVideo'] == "placeholder" ?
+                Text('Update placeholder video $progressD',
+                  style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue),
+                  ) :
+                Text('Download Video $progressD',
+                  style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue),
+                  ),),
             ],
           ),
         ),
@@ -634,12 +641,6 @@ class _ActivityPageState extends State<ActivityPage> {
                     children: [
                       const SizedBox(height: 20.0),
 
-                      Text(network,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue),
-                        ),
                       const SizedBox(height: 20.0),
                       LinearProgressWidget(value: progressValue, total: totalActicities,),
                       const SizedBox(height: 20.0),

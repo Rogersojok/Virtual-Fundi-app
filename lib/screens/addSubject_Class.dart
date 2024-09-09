@@ -62,6 +62,15 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
+      title: 'Add Subject and Class',
+      onBackPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(userId: 1), // Replace with actual userId
+          ),
+        );
+      },
       child: Column(
         children: [
           const Expanded(

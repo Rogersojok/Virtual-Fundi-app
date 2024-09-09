@@ -91,14 +91,14 @@ class _SessionsPageState extends State<SessionsPage> {
         builder: (context, constraints) {
           return Column(
             children: [
-              SizedBox(height: 20.0),
+              SizedBox(height: 15.0),
               Expanded(
                 child: Container(
                   color: Colors.grey[100], // Match the background color of HomeScreen
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: DataTable(
-                      columnSpacing: 16,
+                      columnSpacing: 10,
                       headingRowColor: MaterialStateColor.resolveWith(
                               (states) => Colors.blueGrey.shade50),
                       dataRowColor: MaterialStateColor.resolveWith(
@@ -115,7 +115,7 @@ class _SessionsPageState extends State<SessionsPage> {
                         return DataRow(cells: [
                           DataCell(
                             Container(
-                              width: constraints.maxWidth * 0.4, // 40% of the screen width
+                              width: constraints.maxWidth * 0.7, // 40% of the screen width
                               child: Text(
                                 session['sessionName']!,
                                 overflow: TextOverflow.ellipsis,
@@ -125,7 +125,7 @@ class _SessionsPageState extends State<SessionsPage> {
                           ),
                           DataCell(
                             Container(
-                              width: constraints.maxWidth * 0.1, // 10% of the screen width
+                              width: constraints.maxWidth * 0.2, // 10% of the screen width
                               child: _buildStyledButton(
                                 text: 'View',
                                 onPressed: () {

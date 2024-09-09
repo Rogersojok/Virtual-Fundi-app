@@ -117,7 +117,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               var appDir = await getApplicationDocumentsDirectory();
               filePath = '${appDir.path}/$fileName';
               File file = File(filePath);
-              deleteVideo(filePath);
+              //deleteVideo(filePath);
               await file.writeAsBytes(bytes);
               print('filePath in download function: $filePath');
 
@@ -212,11 +212,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               downloadFile( (progress) {
                 setState(() {
                   progressD = progress;
+
                 });
 
               });
             },
-            child: Text("Failed: Retry:"),
+            child: Text("Failed: Retry:$progressD",
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue),
+            ),
           );
         }
       },
