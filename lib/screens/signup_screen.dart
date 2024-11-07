@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:virtualfundi/screens/signin_screen.dart';
-import 'package:virtualfundi/widgets/custom_scaffold.dart';
-//import 'package:virtualfundi/widgets/animateAButton.dart';
 import '../database/database.dart';
-import '../utills/animateAButton.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -15,7 +12,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formSignupKey = GlobalKey<FormState>();
   bool agreePersonalData = true;
-  bool _passwordVisible = false; // To control password visibility
+  bool _passwordVisible = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _schoolController = TextEditingController();
@@ -32,14 +29,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String password = _passwordController.text;
 
     if (username.isEmpty || school.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
       return;
     }
 
     final user = await dbHelper.getUser(email);
-
     if (user?.email != null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User already exists')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User already exists')),
+      );
     } else {
       final insertUser = User(
         name: username,
@@ -59,42 +59,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScaffold(
-      child: Stack(
+    return Scaffold(
+      body: Stack(
         children: [
-          // Background Image covering the full screen
+          // Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/images/background.jpeg', // Path to your background image
-              fit: BoxFit.cover, // Ensures the image covers the entire screen
+              'assets/images/background.jpeg',
+              fit: BoxFit.cover,
             ),
           ),
-          // Signup Form
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: 600, // Limit the form width for larger screens
-                ),
+                constraints: const BoxConstraints(maxWidth: 600),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Ensures the column doesn't take more space than needed
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Signup Form Container
+                    // SignUp Form Container
                     Container(
                       padding: const EdgeInsets.all(20.0),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.blueAccent.withOpacity(0.9), Colors.blueAccent.withOpacity(0.7)],
+                          colors: [Colors.blue.withOpacity(0.8), Colors.blueAccent.withOpacity(0.6)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(20.0),
+                        borderRadius: BorderRadius.circular(25.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 2,
-                            blurRadius: 10,
+                            color: Colors.black26,
+                            blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
                         ],
@@ -102,14 +98,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Logo or Header
+                          // Title
                           const SizedBox(
-                            height: 80,
+                            height: 60,
                             child: Center(
                               child: Text(
                                 'Sign Up',
                                 style: TextStyle(
-                                  fontSize: 24.0,
+                                  fontSize: 28.0,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
@@ -123,205 +119,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                // Full Name Field
-                                TextFormField(
+                                _buildTextField(
                                   controller: _nameController,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your full name';
-                                    }
-                                    return null;
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Full Name',
-                                    hintText: 'Enter your full name',
-                                    hintStyle: TextStyle(color: Colors.white),
-                                    labelStyle: TextStyle(color: Colors.white),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  ),
+                                  label: 'Full Name',
+                                  hintText: 'Enter your full name',
                                 ),
-                                const SizedBox(height: 20.0),
-                                // School Field
-                                TextFormField(
+                                const SizedBox(height: 15.0),
+                                _buildTextField(
                                   controller: _schoolController,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your school';
-                                    }
-                                    return null;
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'School',
-                                    hintText: 'Enter your school',
-                                    hintStyle: TextStyle(color: Colors.white),
-                                    labelStyle: TextStyle(color: Colors.white),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  ),
+                                  label: 'School',
+                                  hintText: 'Enter your school',
                                 ),
-                                const SizedBox(height: 20.0),
-                                // Email Field
-                                TextFormField(
+                                const SizedBox(height: 15.0),
+                                _buildTextField(
                                   controller: _emailController,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your email';
-                                    }
-                                    return null;
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Email',
-                                    hintText: 'Enter your email',
-                                    hintStyle: TextStyle(color: Colors.white),
-                                    labelStyle: TextStyle(color: Colors.white),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  ),
+                                  label: 'Email',
+                                  hintText: 'Enter your email',
                                 ),
-                                const SizedBox(height: 20.0),
-                                // Password Field
-                                TextFormField(
-                                  controller: _passwordController,
-                                  obscureText: !_passwordVisible, // Toggle password visibility
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    return null;
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    hintText: 'Enter your password',
-                                    hintStyle: TextStyle(color: Colors.white),
-                                    labelStyle: TextStyle(color: Colors.white),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _passwordVisible = !_passwordVisible;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 20.0),
-                                // Agree to Terms Checkbox
-                                Row(
-                                  children: [
-                                    Checkbox(
-                                      value: agreePersonalData,
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          agreePersonalData = value!;
-                                        });
-                                      },
-                                      activeColor: Colors.blueAccent,
-                                    ),
-                                    const Text(
-                                      'I agree to the processing of ',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Personal Data',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                const SizedBox(height: 15.0),
+                                _buildPasswordField(),
+                                const SizedBox(height: 15.0),
+                                _buildAgreementCheckbox(),
                                 const SizedBox(height: 20.0),
                                 // Signup Button
                                 ElevatedButton(
                                   onPressed: _signup,
                                   style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white, backgroundColor: Colors.green, // Text color
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(15),
                                     ),
-                                    padding: EdgeInsets.symmetric(vertical: 15),
-                                    textStyle: TextStyle(fontSize: 16),
+                                    padding: const EdgeInsets.symmetric(vertical: 15),
+                                    textStyle: const TextStyle(fontSize: 16),
                                   ),
-                                  child: Text('Sign Up'),
+                                  child: const Text('Sign Up'),
                                 ),
                                 const SizedBox(height: 20.0),
-                                // Divider with Text
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Divider(
-                                        thickness: 0.7,
-                                        color: Colors.grey.withOpacity(0.5),
-                                      ),
-                                    ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 10),
-                                      child: Text(
-                                        'Or',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Divider(
-                                        thickness: 0.7,
-                                        color: Colors.grey.withOpacity(0.5),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20.0),
-                                // Social Signup Buttons (Placeholder)
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    // Add your social media signup buttons here
-                                    // e.g., Facebook, Google
-                                  ],
-                                ),
-                                const SizedBox(height: 20.0),
-                                // Already have an account
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'Already have an account? ',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const SignInScreen(),
-                                          ),
-                                        );
-                                      },
-                                      child: const Text(
-                                        'Sign in',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                _buildAlreadyHaveAccount(),
                               ],
                             ),
                           ),
@@ -335,6 +170,123 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Text Field Builder
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hintText,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your $label';
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Colors.white70),
+        labelStyle: const TextStyle(color: Colors.white),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.2),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
+  }
+
+  // Password Field with Visibility Toggle
+  Widget _buildPasswordField() {
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: !_passwordVisible,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your password';
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        labelText: 'Password',
+        hintText: 'Enter your password',
+        hintStyle: const TextStyle(color: Colors.white70),
+        labelStyle: const TextStyle(color: Colors.white),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.2),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _passwordVisible ? Icons.visibility : Icons.visibility_off,
+            color: Colors.white70,
+          ),
+          onPressed: () {
+            setState(() {
+              _passwordVisible = !_passwordVisible;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  // Agreement Checkbox
+  Widget _buildAgreementCheckbox() {
+    return Row(
+      children: [
+        Checkbox(
+          value: agreePersonalData,
+          onChanged: (bool? value) {
+            setState(() {
+              agreePersonalData = value!;
+            });
+          },
+          activeColor: Colors.blueAccent,
+        ),
+        const Text(
+          'I agree to the processing of Personal Data',
+          style: TextStyle(color: Colors.white),
+        ),
+      ],
+    );
+  }
+
+  // Already Have an Account Section
+  Widget _buildAlreadyHaveAccount() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'Already have an account? ',
+          style: TextStyle(color: Colors.white),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SignInScreen(),
+              ),
+            );
+          },
+          child: const Text(
+            'Sign In',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.blueAccent,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

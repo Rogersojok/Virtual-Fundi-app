@@ -4,9 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'SessionsPage.dart';
 import 'addSubject_Class.dart';
-import 'signin_screen.dart';
-import 'signup_screen.dart';
-import '../theme/theme.dart';
 import '../database/database.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -34,16 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchData();
     fetchLocalData();
   }
-
-  @override
-  void didPopNext() {
-    // This is called when user comes back to this page
-    print("+++++++++++++++++++++++++++++++++++++");
-    print("Came back to MyPage");
-    fetchData();
-    fetchLocalData();
-  }
-
 
   Future<void> fetchData() async {
     final dbHelper = DatabaseHelper();
@@ -103,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Ensure the Scaffold background color is set
+      backgroundColor: Colors.grey[100],
       body: CustomScaffold(
         title: 'Topics',
         child: LayoutBuilder(
@@ -113,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20.0),
                 Expanded(
                   child: Container(
-                    color: Colors.grey[100], // Set background color for the table area
+                    color: Colors.grey[100],
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
@@ -136,35 +123,39 @@ class _HomeScreenState extends State<HomeScreen> {
                             .map((topic) => DataRow(cells: [
                           DataCell(
                             Container(
-                              width: constraints.maxWidth * 0.4, // 40% of the screen width for Topic column
+                              width: constraints.maxWidth *
+                                  0.35, // 35% of the screen width for Topic column
                               child: Text(
                                 topic['topicName']!,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 16),
+                                style: TextStyle(fontSize: 12),
                               ),
                             ),
                           ),
                           DataCell(
                             Container(
-                              width: constraints.maxWidth * 0.1, // 10% of the screen width for Class column
+                              width: constraints.maxWidth *
+                                  0.1, // 10% of the screen width for Class column
                               child: Text(
                                 topic['classTaught']!,
-                                style: TextStyle(fontSize: 14),
+                                style: TextStyle(fontSize: 12),
                               ),
                             ),
                           ),
                           DataCell(
                             Container(
-                              width: constraints.maxWidth * 0.1, // 10% of the screen width for Term column
+                              width: constraints.maxWidth *
+                                  0.1, // 10% of the screen width for Term column
                               child: Text(
                                 topic['term']!,
-                                style: TextStyle(fontSize: 14),
+                                style: TextStyle(fontSize: 12),
                               ),
                             ),
                           ),
                           DataCell(
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisAlignment:
+                              MainAxisAlignment.start,
                               children: [
                                 _buildStyledButton(
                                   text: 'Prepare',
@@ -181,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     );
                                   },
                                 ),
-                                const SizedBox(width: 8.0),
+                                const SizedBox(width: 6.0),
                                 _buildStyledButton(
                                   text: 'Start Class',
                                   onPressed: () {
@@ -230,7 +221,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Function to build styled buttons
   Widget _buildStyledButton({
     required String text,
     required VoidCallback onPressed,
@@ -245,11 +235,11 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }

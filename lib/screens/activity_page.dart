@@ -480,7 +480,10 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Widget _buildVideoActivity(Map<String, dynamic> activity) {
-    String videoFilePath = activity['video'];
+    // Convert the map to an Activity instance
+    Activity currentActivity = Activity.fromMap(activity);
+
+    String videoFilePath = currentActivity.video;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -492,63 +495,72 @@ class _ActivityPageState extends State<ActivityPage> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(width: 10),
-            Text(activity['videoTitle'] ?? ''),
-            // Replace 'videoTitle' with the correct key from your activity map
+            // Make the video title responsive and ensure full words are visible
+            Expanded( // Use Expanded instead of Flexible for full width
+              child: Text(
+                currentActivity.videoTitle,
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.04, // Smaller responsive font size
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black, // Customize the color to fit your theme
+                ),
+                softWrap: true, // Ensure words wrap correctly
+                overflow: TextOverflow.visible, // Avoid truncating the text
+                maxLines: 2, // Allow for two lines if necessary
+              ),
+            ),
           ],
         ),
         SizedBox(height: 8),
         // Render video-specific UI elements
-        // Video player widget directly integrated here
         Container(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Text(
-              //   'Video:',
-              //   style: TextStyle(fontWeight: FontWeight.bold),
-              // ),
               SizedBox(height: 8),
-              // Render video-specific UI elements
-
               videoFilePath.isNotEmpty && activities[currentIndex]['realVideo'] != "placeholder"
                   ? VideoPlayerWidget(videoFilePath: videoFilePath, activity: currentActivity,)
                   : ElevatedButton(
                 onPressed: () async {
                   try {
-                    // Call the download function here
                     String filePath = await downloadFile(
-                        dataVideoD[currentIndex]['video'],
-                            (progress) {
-                              setState(() {
-                                progressD = progress;
-                              });
-                          print(
-                              '${dataVideoD[currentIndex]['video']} Download progress: $progressD');
+                      dataVideoD[currentIndex]['video'],
+                          (progress) {
+                        setState(() {
+                          progressD = progress;
                         });
-                    // Once download is complete, update the video file path and start initializing the video player
+                        print(
+                          '${dataVideoD[currentIndex]['video']} Download progress: $progressD',
+                        );
+                      },
+                    );
                     print('after update path $filePath');
                     setState(() {
-                      videoFilePath = _videoFilePath;
+                      videoFilePath = filePath; // Update to the downloaded file path
                       print('setState update path $videoFilePath');
                     });
-
                   } catch (error) {
                     print('Download error: $error');
                   }
                 },
-                child:  activities[currentIndex]['realVideo'] == "placeholder" ?
-                Text('Update placeholder video $progressD',
+                child: activities[currentIndex]['realVideo'] == "placeholder"
+                    ? Text(
+                  'Update placeholder video $progressD',
                   style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue),
-                  ) :
-                Text('Download Video $progressD',
+                    fontSize: 15, // Keep the button font size the same or adjust as needed
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                )
+                    : Text(
+                  'Download Video $progressD',
                   style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue),
-                  ),),
+                    fontSize: 15, // Keep the button font size the same or adjust as needed
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -557,6 +569,8 @@ class _ActivityPageState extends State<ActivityPage> {
       ],
     );
   }
+
+
 
   void nextActivity() {
     setState(() {
@@ -662,16 +676,21 @@ class _ActivityPageState extends State<ActivityPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          AnimatedElevatedButton(
+                          IconButton(
                             onPressed: activities[currentIndex]['mediaType'] == "text" ? previousTextElement : previousActivity,
-                            text: 'Previous',
+                            icon: Icon(Icons.arrow_back), // Left arrow icon
+                            tooltip: 'Previous', // Tooltip for accessibility
+                            color: Colors.black, // Customize the color as needed
                           ),
-                          AnimatedElevatedButton(
+                          IconButton(
                             onPressed: activities[currentIndex]['mediaType'] == "text" ? nextTextElement : nextActivity,
-                            text: 'Next',
+                            icon: Icon(Icons.arrow_forward), // Right arrow icon
+                            tooltip: 'Next', // Tooltip for accessibility
+                            color: Colors.black, // Customize the color as needed
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 20.0),
                     ],
                   ),

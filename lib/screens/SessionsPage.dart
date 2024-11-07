@@ -21,6 +21,8 @@ class SessionsPage extends StatefulWidget {
 class _SessionsPageState extends State<SessionsPage> {
   List<Map<String, dynamic>> sessions = [];
   late final Connectivity _connectivity;
+  final ScrollController _scrollController = ScrollController();
+  bool _showIndicator = false;
 
   @override
   void initState() {
@@ -28,6 +30,19 @@ class _SessionsPageState extends State<SessionsPage> {
     _connectivity = Connectivity();
     fetchData();
     fetchLocalData();
+
+    // Listen to scroll changes
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels < _scrollController.position.maxScrollExtent) {
+        setState(() {
+          _showIndicator = true;
+        });
+      } else {
+        setState(() {
+          _showIndicator = false;
+        });
+      }
+    });
   }
 
   Future<void> fetchData() async {
@@ -95,56 +110,80 @@ class _SessionsPageState extends State<SessionsPage> {
               Expanded(
                 child: Container(
                   color: Colors.grey[100], // Match the background color of HomeScreen
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columnSpacing: 10,
-                      headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.blueGrey.shade50),
-                      dataRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.white),
-                      headingTextStyle: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                      columns: [
-                        DataColumn(label: Text('Session Name')),
-                        DataColumn(label: Text('Start Session')),
-                      ],
-                      rows: sessions.map((session) {
-                        return DataRow(cells: [
-                          DataCell(
-                            Container(
-                              width: constraints.maxWidth * 0.7, // 40% of the screen width
-                              child: Text(
-                                session['sessionName']!,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 16),
-                              ),
+                  child: Stack(
+                    children: [
+                      SingleChildScrollView(
+                        controller: _scrollController, // Assigning the ScrollController
+                        scrollDirection: Axis.vertical, // Vertical scrolling enabled
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal, // Horizontal scrolling enabled
+                          child: DataTable(
+                            columnSpacing: 10,
+                            headingRowColor: MaterialStateColor.resolveWith(
+                                    (states) => Colors.blueGrey.shade50),
+                            dataRowColor: MaterialStateColor.resolveWith(
+                                    (states) => Colors.white),
+                            headingTextStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
-                          ),
-                          DataCell(
-                            Container(
-                              width: constraints.maxWidth * 0.2, // 10% of the screen width
-                              child: _buildStyledButton(
-                                text: 'View',
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => SessionDetailsPage(
-                                        sessionName: session['sessionName']!,
-                                        sessionId: session['id']!,
-                                      ),
+                            columns: [
+                              DataColumn(label: Text('Session Name')),
+                              DataColumn(label: Text('Start Session')),
+                            ],
+                            rows: sessions.map((session) {
+                              return DataRow(cells: [
+                                DataCell(
+                                  Container(
+                                    width: constraints.maxWidth * 0.7, // 70% of the screen width
+                                    child: Text(
+                                      session['sessionName']!,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 16),
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Container(
+                                    width: constraints.maxWidth * 0.2, // 20% of the screen width
+                                    child: _buildStyledButton(
+                                      text: 'View',
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SessionDetailsPage(
+                                              sessionName: session['sessionName']!,
+                                              sessionId: session['id']!,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ]);
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                      // Indicator for more content below
+                      if (_showIndicator)
+                        Positioned(
+                          bottom: 10,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 5),
+                            color: Colors.blueAccent,
+                            child: Text(
+                              'Scroll down for more',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                           ),
-                        ]);
-                      }).toList(),
-                    ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -177,5 +216,11 @@ class _SessionsPageState extends State<SessionsPage> {
         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose(); // Dispose the ScrollController
+    super.dispose();
   }
 }

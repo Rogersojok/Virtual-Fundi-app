@@ -71,7 +71,7 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
-      title: widget.sessionName,
+      title: widget.sessionName, // Title appears in the CustomScaffold
       onBackPressed: () => Navigator.pop(context),
       child: Stack(
         children: [
@@ -82,15 +82,8 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    ' ${widget.sessionName}',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: lightColorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 10.0),
+                  // Removed the title display and empty space above
+                  // const SizedBox(height: 10.0), // Removed this line
                   // Session details
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),

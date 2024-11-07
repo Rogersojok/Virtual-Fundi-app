@@ -48,12 +48,64 @@ class CustomScaffold extends StatelessWidget {
                           child: Text(
                             title,
                             style: const TextStyle(
-                              fontSize: 22,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
                         ),
+                      ),
+                      // Navigation dropdown menu on the right side
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.menu, color: Colors.white),
+                        onSelected: (value) {
+                          // Handle menu selection here
+                          switch (value) {
+                            case 'Contact Us':
+                            // Navigate to Contact Us page
+                              break;
+                            case 'About Fundi Bots':
+                            // Navigate to About Fundi Bots page
+                              break;
+                            case 'Settings':
+                            // Navigate to Settings page
+                              break;
+                          }
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return [
+                            const PopupMenuItem<String>(
+                              value: 'Contact Us',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.contact_phone, color: Colors.black), // Icon for Contact Us
+                                  SizedBox(width: 8),
+                                  Text('Contact Us'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'About Fundi Bots',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info, color: Colors.black), // Icon for About Fundi Bots
+                                  SizedBox(width: 8),
+                                  Text('About Fundi Bots'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'Settings',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.settings, color: Colors.black), // Icon for Settings
+                                  SizedBox(width: 8),
+                                  Text('Settings'),
+                                ],
+                              ),
+                            ),
+                          ];
+                        },
                       ),
                       if (onForwardPressed != null)
                         IconButton(

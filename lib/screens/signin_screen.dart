@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:virtualfundi/screens/signup_screen.dart';
-import 'package:virtualfundi/widgets/custom_scaffold.dart';
-import 'package:virtualfundi/widgets/welcome_button.dart';
 import '../database/database.dart';
-import '../utills/animateAButton.dart';
 import 'home_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -14,7 +11,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  bool _obscurePassword = true; // State to manage password visibility
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -46,12 +43,11 @@ class _SignInScreenState extends State<SignInScreen> {
 
     // check if the email exists
     if (user?.email != null) {
-      print('User Exist');
-      // go ahead and check if password matches
       if (user?.password == password) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logged in successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Logged in successfully')),
+        );
         userId = await dbHelper.getUserId(email);
-        // Navigate to home screen
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -59,23 +55,34 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wrong password')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Wrong password')),
+        );
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not found')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not found')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomScaffold(
-      child: Stack(
+    return Scaffold(
+      body: Stack(
         children: [
-          // Background Image covering the full screen
+          // Background Image with overlay
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/background.jpeg', // Path to your background image
-              fit: BoxFit.cover, // Ensures the image covers the entire screen
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/background.jpeg'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Container(
+                color: Colors.black.withOpacity(0.5), // Dark overlay for better contrast
+              ),
             ),
           ),
           // Login Form
@@ -83,25 +90,25 @@ class _SignInScreenState extends State<SignInScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: 600, // Limit the form width for larger screens
-                ),
+                constraints: BoxConstraints(maxWidth: 600),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Ensures the column doesn't take more space than needed
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Login Form Container
                     Container(
                       padding: const EdgeInsets.all(20.0),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.blueAccent.withOpacity(0.9), Colors.blueAccent.withOpacity(0.7)],
+                          colors: [
+                            Colors.blue.shade300.withOpacity(0.9),
+                            Colors.blue.shade600.withOpacity(0.8),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
+                            color: Colors.black.withOpacity(0.2),
                             spreadRadius: 2,
                             blurRadius: 10,
                             offset: Offset(0, 5),
@@ -111,16 +118,22 @@ class _SignInScreenState extends State<SignInScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Logo or Header
                           const SizedBox(
                             height: 80,
                             child: Center(
                               child: Text(
-                                'Login',
+                                'Welcome Back!',
                                 style: TextStyle(
-                                  fontSize: 24.0,
+                                  fontSize: 26.0,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      blurRadius: 10,
+                                      color: Colors.black38,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -142,21 +155,24 @@ class _SignInScreenState extends State<SignInScreen> {
                                     return null;
                                   },
                                   decoration: InputDecoration(
-                                    labelText: 'User name',
-                                    hintText: 'Enter your User name',
-                                    hintStyle: TextStyle(color: Colors.white),
+                                    labelText: 'Username',
+                                    hintText: 'Enter your username',
+                                    hintStyle: TextStyle(color: Colors.white70),
                                     labelStyle: TextStyle(color: Colors.white),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    filled: true,
+                                    fillColor: Colors.white.withOpacity(0.1),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                   ),
                                 ),
                                 const SizedBox(height: 20.0),
                                 // Password Field
                                 TextFormField(
                                   controller: _passwordController,
-                                  obscureText: _obscurePassword, // Toggle password visibility
+                                  obscureText: _obscurePassword,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Please enter your password';
@@ -166,15 +182,20 @@ class _SignInScreenState extends State<SignInScreen> {
                                   decoration: InputDecoration(
                                     labelText: 'Password',
                                     hintText: 'Enter your password',
-                                    hintStyle: TextStyle(color: Colors.white),
+                                    hintStyle: TextStyle(color: Colors.white70),
                                     labelStyle: TextStyle(color: Colors.white),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    filled: true,
+                                    fillColor: Colors.white.withOpacity(0.1),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                     suffixIcon: IconButton(
                                       icon: Icon(
-                                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                        _obscurePassword
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
                                         color: Colors.white,
                                       ),
                                       onPressed: () {
@@ -190,12 +211,19 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ElevatedButton(
                                   onPressed: _login,
                                   style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white, backgroundColor: Colors.green, // Text color
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Colors.greenAccent,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    padding: EdgeInsets.symmetric(vertical: 15),
-                                    textStyle: TextStyle(fontSize: 16),
+                                    padding:
+                                    EdgeInsets.symmetric(vertical: 15),
+                                    textStyle: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    shadowColor: Colors.black54,
+                                    elevation: 6,
                                   ),
                                   child: Text('Login'),
                                 ),
@@ -205,12 +233,13 @@ class _SignInScreenState extends State<SignInScreen> {
                                   children: [
                                     Expanded(
                                       child: Divider(
-                                        thickness: 0.7,
-                                        color: Colors.grey.withOpacity(0.5),
+                                        thickness: 1.0,
+                                        color: Colors.white30,
                                       ),
                                     ),
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 10),
+                                      padding:
+                                      EdgeInsets.symmetric(horizontal: 10),
                                       child: Text(
                                         'Or',
                                         style: TextStyle(color: Colors.white),
@@ -218,8 +247,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                     ),
                                     Expanded(
                                       child: Divider(
-                                        thickness: 0.7,
-                                        color: Colors.grey.withOpacity(0.5),
+                                        thickness: 1.0,
+                                        color: Colors.white30,
                                       ),
                                     ),
                                   ],
@@ -227,10 +256,20 @@ class _SignInScreenState extends State<SignInScreen> {
                                 const SizedBox(height: 20.0),
                                 // Social Login Buttons (Placeholder)
                                 const Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    // Add your social media login buttons here
-                                    // e.g., Facebook, Google
+                                    // Placeholder icons for social media buttons
+                                    Icon(
+                                      Icons.facebook,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
+                                    Icon(
+                                      Icons.email,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 20.0),
@@ -247,7 +286,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const SignUpScreen(),
+                                            builder: (context) =>
+                                            const SignUpScreen(),
                                           ),
                                         );
                                       },
@@ -255,7 +295,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                         'Sign up',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.green,
+                                          color: Colors.greenAccent,
                                         ),
                                       ),
                                     ),
