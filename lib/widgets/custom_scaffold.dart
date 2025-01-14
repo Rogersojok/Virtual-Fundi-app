@@ -23,98 +23,76 @@ class CustomScaffold extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
+                // Header Section
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   alignment: Alignment.center,
-                  height: 80,
+                  height: 120,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF003366),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Color(0xFFFFD700),
-                        width: 4.0,
-                      ),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF8A2BE2), Color(0xFFDA70D6)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
                     ),
                   ),
-                  child: Row(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (onBackPressed != null)
-                        IconButton(
-                          icon: Icon(Icons.arrow_back, color: Colors.white),
-                          onPressed: onBackPressed,
-                        ),
-                      Expanded(
-                        child: Center(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            onPressed: onBackPressed ?? () {},
+                          ),
+                          Row(
+                            children: const [
+                              Text(
+                                "Category",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Text(
+                                "Attention",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.menu, color: Colors.white),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16),
                           child: Text(
                             title,
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
                         ),
                       ),
-                      // Navigation dropdown menu on the right side
-                      PopupMenuButton<String>(
-                        icon: Icon(Icons.menu, color: Colors.white),
-                        onSelected: (value) {
-                          // Handle menu selection here
-                          switch (value) {
-                            case 'Contact Us':
-                            // Navigate to Contact Us page
-                              break;
-                            case 'About Fundi Bots':
-                            // Navigate to About Fundi Bots page
-                              break;
-                            case 'Settings':
-                            // Navigate to Settings page
-                              break;
-                          }
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            const PopupMenuItem<String>(
-                              value: 'Contact Us',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.contact_phone, color: Colors.black), // Icon for Contact Us
-                                  SizedBox(width: 8),
-                                  Text('Contact Us'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'About Fundi Bots',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.info, color: Colors.black), // Icon for About Fundi Bots
-                                  SizedBox(width: 8),
-                                  Text('About Fundi Bots'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'Settings',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.settings, color: Colors.black), // Icon for Settings
-                                  SizedBox(width: 8),
-                                  Text('Settings'),
-                                ],
-                              ),
-                            ),
-                          ];
-                        },
-                      ),
-                      if (onForwardPressed != null)
-                        IconButton(
-                          icon: Icon(Icons.arrow_forward, color: Colors.white),
-                          onPressed: onForwardPressed,
-                        ),
                     ],
                   ),
                 ),
+
+                // Main Content
                 Expanded(
                   child: child ?? const SizedBox.shrink(),
                 ),

@@ -27,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _connectivity.onConnectivityChanged;
     fetchData();
     fetchLocalData();
   }
@@ -97,104 +96,133 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context, constraints) {
             return Column(
               children: [
-                const SizedBox(height: 20.0),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Select a topic to prepare for or begin a class session',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
                 Expanded(
-                  child: Container(
-                    color: Colors.grey[100],
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columnSpacing: 0,
-                        headingRowColor: MaterialStateColor.resolveWith(
-                                (states) => Colors.blueGrey.shade50),
-                        dataRowColor: MaterialStateColor.resolveWith(
-                                (states) => Colors.white),
-                        headingTextStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        columns: const [
-                          DataColumn(label: Text('Topic')),
-                          DataColumn(label: Text('Class')),
-                          DataColumn(label: Text('Term')),
-                          DataColumn(label: Text('Actions')),
-                        ],
-                        rows: filteredTopics
-                            .map((topic) => DataRow(cells: [
-                          DataCell(
-                            Container(
-                              width: constraints.maxWidth *
-                                  0.35, // 35% of the screen width for Topic column
-                              child: Text(
-                                topic['topicName']!,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
+                  child: ListView.builder(
+                    itemCount: filteredTopics.length,
+                    itemBuilder: (context, index) {
+                      final topic = filteredTopics[index];
+                      final backgroundColor = _getRowColor(index);
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.0),
                           ),
-                          DataCell(
-                            Container(
-                              width: constraints.maxWidth *
-                                  0.1, // 10% of the screen width for Class column
-                              child: Text(
-                                topic['classTaught']!,
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Container(
-                              width: constraints.maxWidth *
-                                  0.1, // 10% of the screen width for Term column
-                              child: Text(
-                                topic['term']!,
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.start,
+                          color: backgroundColor,
+                          elevation: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildStyledButton(
-                                  text: 'Prepare',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SessionsPage(
-                                              topic: topic['topicName'],
-                                              topicId: topic['id'],
-                                            ),
+                                Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      topic['topicName']!,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
-                                    );
-                                  },
+                                    ),
+                                    Text(
+                                      'Ranking',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 6.0),
-                                _buildStyledButton(
-                                  text: 'Start Class',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SessionsPage(
-                                              topic: topic['topicName']!,
-                                              topicId: topic['id']!,
-                                            ),
-                                      ),
-                                    );
-                                  },
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Class: ${topic['classTaught']!}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                Text(
+                                  'Term: ${topic['term']!}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.thumb_up, color: Colors.white),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          '2342 Popularity',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        _buildStyledButton(
+                                          text: 'Prepare',
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => SessionsPage(
+                                                  topic: topic['topicName'],
+                                                  topicId: topic['id'],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        SizedBox(width: 8),
+                                        _buildStyledButton(
+                                          text: 'Start Class',
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => SessionsPage(
+                                                  topic: topic['topicName']!,
+                                                  topicId: topic['id']!,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
-                        ]))
-                            .toList(),
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -242,5 +270,16 @@ class _HomeScreenState extends State<HomeScreen> {
         style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
+  }
+
+  Color _getRowColor(int index) {
+    final colors = [
+      Colors.purple,
+      Colors.orange,
+      Colors.pink,
+      Colors.blue,
+      Colors.green,
+    ];
+    return colors[index % colors.length].withOpacity(0.9);
   }
 }

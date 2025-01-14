@@ -11,16 +11,16 @@ class WelcomeScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image covering the full screen
+          // Fullscreen Background Image with a subtle dark overlay for visual contrast
           Positioned.fill(
             child: Image.asset(
-              'assets/images/background.jpeg', // Path to your background image
-              fit: BoxFit.cover, // Ensures the image covers the entire screen
-              color: Colors.black.withOpacity(0.3), // Adding a slight dark overlay for contrast
-              colorBlendMode: BlendMode.darken,
+              'assets/images/background.jpeg', // Background image path
+              fit: BoxFit.cover, // Ensures the image fills the screen
+              color: Colors.black.withOpacity(0.3), // Dark overlay with transparency
+              colorBlendMode: BlendMode.darken, // Blend mode for the overlay effect
             ),
           ),
-          // Centered Text Content
+          // Centered Welcome Message
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -42,7 +42,7 @@ class WelcomeScreen extends StatelessWidget {
                         TextSpan(
                           text: '\nVirtual Fundi',
                           style: TextStyle(
-                            fontSize: 75,
+                            fontSize: 75.0,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                             shadows: [
@@ -59,7 +59,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Your gateway to a virtual learning experience.',
+                    '', // Placeholder for additional text if needed
                     style: TextStyle(
                       fontSize: 16.0,
                       color: Colors.white70,
@@ -71,33 +71,35 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Buttons Section
+          // Bottom Buttons for "Sign Up" and "Log In"
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.all(20.0), // Padding around the button section
+              padding: const EdgeInsets.all(20.0), // Outer padding around the button section
               child: Row(
                 children: [
+                  // Sign Up Button
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10), // Button-specific padding
+                      padding: const EdgeInsets.symmetric(vertical: 10.0), // Vertical padding for the button
                       child: WelcomeButton(
                         buttonText: 'Sign Up',
                         onTap: const SignUpScreen(),
-                        color: Colors.transparent, // Ensure button color is set to transparent
-                        textColor: Colors.orange,
+                        color: Colors.transparent, // Transparent button background
+                        textColor: Colors.orange, // Text color matching theme
                       ),
                     ),
                   ),
-                  const SizedBox(width: 20), // Add space between the buttons
+                  const SizedBox(width: 20), // Spacing between the buttons
+                  // Log In Button
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10), // Button-specific padding
+                      padding: const EdgeInsets.symmetric(vertical: 10.0), // Vertical padding for the button
                       child: WelcomeButton(
                         buttonText: 'Log In',
                         onTap: const SignInScreen(),
-                        color: Colors.orange,
-                        textColor: Colors.white,
+                        color: Colors.orange, // Button color aligned with theme
+                        textColor: Colors.white, // Text color for contrast
                       ),
                     ),
                   ),
