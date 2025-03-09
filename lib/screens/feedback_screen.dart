@@ -316,6 +316,7 @@ class _FeedbackScreenState extends State<FeedbackScreen>
             Radio<int>(
               value: index + 1,
               groupValue: _satisfactionRating,
+              activeColor: Colors.purple,
               onChanged: (newValue) => setState(() => _satisfactionRating = newValue!),
             ),
           ],

@@ -18,7 +18,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     // TODO: implement initState
     super.initState();
     setState(() {
-      AppInitializationService().runInitialization();
+      AppInitializationService().runInitialization(context);
     });
   }
 
