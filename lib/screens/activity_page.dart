@@ -16,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utills/animateAButton.dart';
 import 'package:disk_space_plus/disk_space_plus.dart';
+import 'package:virtualfundi/services/access_token.dart';
 
 // class for data fetched from the database
 
@@ -54,14 +55,9 @@ class _ActivityPageState extends State<ActivityPage> {
     super.initState();
     //_checkInternetAndFetchData();
     internet2();
-    fetchData();
+    //fetchData();
     fetchLocalData();
     checkDiskSpace();
-
-
-
-    //setActivity();
-
   }
 
   void setActivity(){
@@ -146,7 +142,7 @@ class _ActivityPageState extends State<ActivityPage> {
     await dbHelper.initializeDatabase();
 
     final response = await http.get(Uri.parse(
-        'http://161.97.81.168:8080/viewActivities/${widget.sessionId}'));
+        'https://fbappliedscience.com/api/viewActivities/${widget.sessionId}'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
@@ -154,6 +150,8 @@ class _ActivityPageState extends State<ActivityPage> {
 
       // Convert JSON data to Session objects and insert into the database
       for (var jsonData in data) {
+        // download video here before inserting in the database.
+
         final activity = Activity(
           id: jsonData['id'],
           title: jsonData['title'],
@@ -188,6 +186,8 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
+
+
   Future<void> fetchLocalData() async {
 
     final dbHelper = DatabaseHelper();
@@ -216,14 +216,21 @@ class _ActivityPageState extends State<ActivityPage> {
 
 
   Future<String> downloadFile(String fileUrl, Function(int) onProgress) async {
+    // retrive access token
+    String? token = await getToken(); // Retrieve stored token
     try {
       var httpClient = http.Client();
       var request = http.Request('GET', Uri.parse(
-          'http://161.97.81.168:8080${fileUrl}'));
+          'https://fbappliedscience.com/api${fileUrl}'));
       var response = await httpClient.send(request);
 
       var activity_response = await http.get(Uri.parse(
-          'http://161.97.81.168:8080/getActivity/${activities[currentIndex]['id']}'));
+          'https://fbappliedscience.com/api/${activities[currentIndex]['id']}'),
+        headers: {
+          'Authorization': 'Token $token', // Add token to request
+          'Content-Type': 'application/json',
+        },
+      );
 
       final Map<String, dynamic> data = json.decode(activity_response.body);
       print(activity_response.body);

@@ -329,41 +329,47 @@ class _FeedbackScreenState extends State<FeedbackScreen>
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
-    final teacherData = TeacherData(
-      teacherName: _teacherNameController.text.toString(),
-      schoolName: _schoolNameController.text.toString(),
-      classStream: _classStreamController.text.toString(),
-      topicCovered: _topicCoveredController.text.toString(),
-      sessionCovered: _sessionsCoveredController.text.toString(),
+    try {
+      final teacherData = TeacherData(
+        teacherName: _teacherNameController.text.toString(),
+        schoolName: _schoolNameController.text.toString(),
+        classStream: _classStreamController.text.toString(),
+        topicCovered: _topicCoveredController.text.toString(),
+        sessionCovered: _sessionsCoveredController.text.toString(),
 
-      // TabUsage Fields
-      frequency: _tabletUsage,
-      easeOfUse: _tabletEaseOfUse,
-      digitalContentUsefulnes: _digitalContentUsefulnes,
-      prepTimeSaved: _prepTimeSaved,
-      effectivenessOfIntruc: _effectivenessOfIntruc,
+        // TabUsage Fields
+        frequency: _tabletUsage,
+        easeOfUse: _tabletEaseOfUse,
+        digitalContentUsefulnes: _digitalContentUsefulnes,
+        prepTimeSaved: _prepTimeSaved,
+        effectivenessOfIntruc: _effectivenessOfIntruc,
 
 
-      // VideoContent Fields
-      // VideoContent Fields as a Key-Value Pair
-      videoContentRatings: _ratings,
-      escVideoHelpfulness: _escVideoHelpfulness,
-      confidenceInESC: _confidenceInESC,
-      escVideoPreparation: _escVideoPreparation,
+        // VideoContent Fields
+        // VideoContent Fields as a Key-Value Pair
+        videoContentRatings: _ratings,
+        escVideoHelpfulness: _escVideoHelpfulness,
+        confidenceInESC: _confidenceInESC,
+        escVideoPreparation: _escVideoPreparation,
 
-      // Evaluation Fields
-      overallSatisfaction: _satisfactionRating,
-      challenges: _challenges,
-      improvements: _improvementsController.text.toString(),
-      additionalComments: _commentsController.text.toString(),
-      evaluationDate: DateTime.now(),
-    );
+        // Evaluation Fields
+        overallSatisfaction: _satisfactionRating,
+        challenges: _challenges,
+        improvements: _improvementsController.text.toString(),
+        additionalComments: _commentsController.text.toString(),
+        evaluationDate: DateTime.now(),
+      );
+      //await insertTeacherData(teacherData);
+      await dbHelper.insertTeacherData(teacherData);
 
-    //await insertTeacherData(teacherData);
-    await dbHelper.insertTeacherData(teacherData);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Feedback submitted!')));
+    }catch(e){
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Unsuccessful!')));
+    }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Feedback submitted!')));
+
   }
 }
 

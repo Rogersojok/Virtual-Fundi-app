@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../screens/feedback_screen.dart';
+import 'package:virtualfundi/screens/adminLogin.dart';
 
 class CustomScaffold extends StatelessWidget {
   final Widget? child;
@@ -18,89 +20,114 @@ class CustomScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                // Header Section
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  alignment: Alignment.center,
-                  height: 120,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF8A2BE2), Color(0xFFDA70D6)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(24),
-                      bottomRight: Radius.circular(24),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
-                            onPressed: onBackPressed ?? () {},
-                          ),
-                          Row(
-                            children: const [
-                              Text(
-                                "Category",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              Text(
-                                "Attention",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.menu, color: Colors.white),
-                            onPressed: () {},
-                          ),
-                        ],
-                      ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 16),
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Main Content
-                Expanded(
-                  child: child ?? const SizedBox.shrink(),
-                ),
-              ],
+      drawer: Drawer(
+        child: Column(
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text('Sarah Abs'),
+              accountEmail: Text('sarah@abs.com'),
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: AssetImage('assets/profile.PNG'), // Replace with your image path
+              ),
+              decoration: BoxDecoration(
+                color: Color(0xFF6A0DAD), // Purple background
+              ),
             ),
+            Expanded(
+              child: ListView(
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.home, color: Colors.black),
+                    title: Text('Home'),
+                    onTap: () {
+                      // Add navigation for home here
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.favorite, color: Colors.black),
+                    title: Text('Favourites'),
+                    onTap: () {
+                      // Add navigation for favourites here
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.work_outline, color: Colors.black),
+                    title: Text('Workflow'),
+                    onTap: () {
+                      // Add navigation for workflow here
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.update, color: Colors.black),
+                    title: Text('Updates'),
+                    onTap: () {
+                      // Add navigation for updates here
+                    },
+                  ),
+                  Divider(),
+                  ListTile(
+                    leading: Icon(Icons.extension, color: Colors.black),
+                    title: Text('Plugins'),
+                    onTap: () {
+                      // Add navigation for plugins here
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.notifications, color: Colors.black),
+                    title: Text('Feedback'),
+                    onTap: () {
+                      // Navigate to FeedbackScreen when "Feedback" is tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FeedbackScreen()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.admin_panel_settings, color: Colors.black),
+                    title: Text('Admin'),
+                    onTap: () {
+                      // Navigate to FeedbackScreen when "Feedback" is tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AdminLoginPage()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF6A0DAD), // Purple background
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
           ),
+        ),
+        actions: [
+          if (onBackPressed != null)
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: onBackPressed,
+            ),
+          if (onForwardPressed != null)
+            IconButton(
+              icon: Icon(Icons.arrow_forward),
+              onPressed: onForwardPressed,
+            ),
         ],
       ),
+      body: child ?? const SizedBox.shrink(),
     );
   }
 }

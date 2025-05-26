@@ -57,6 +57,7 @@ Future<void> showFeedback(BuildContext context) async {
     if (ids.contains(f['teacherId'].toString())) {
       print("data has been sync already");
     }else{
+      print(f);
       sendData(f);
     }
     print("+++++++++++++++++++++++++++++++++++++++");
@@ -73,7 +74,7 @@ Future<void> showFeedback(BuildContext context) async {
 
 // Send POST request to Django server
 Future<void> sendData(data) async {
-  final url = Uri.parse('http://161.97.81.168:8080/addFeedback'); // Replace with your Django API URL
+  final url = Uri.parse('https://fbappliedscience.com/api/addFeedback'); // Replace with your Django API URL
 
   try {
     final response = await http.post(

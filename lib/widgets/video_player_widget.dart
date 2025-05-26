@@ -9,6 +9,7 @@ import '../database/database.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http; // Import http package for making api request.
+import 'package:virtualfundi/services/access_token.dart';
 
 class VideoPlayerWidget extends StatefulWidget {
   final String videoFilePath;
@@ -65,11 +66,18 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
 
   Future<String> downloadFile(Function(int) onProgress) async {
+    // retrive access token
+    String? token = await getToken(); // Retrieve stored token
     try {
       var httpClient = http.Client();
 
       var activity_response = await http.get(Uri.parse(
-          'http://161.97.81.168:8080/getActivity/${widget.activity!.id}'));
+          'http://161.97.81.168:8080/getActivity/${widget.activity!.id}'),
+        headers: {
+          'Authorization': 'Token $token', // Add token to request
+          'Content-Type': 'application/json',
+        },
+      );
 
       final Map<String, dynamic> data = json.decode(activity_response.body);
       print(activity_response.body);
@@ -123,6 +131,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
               setState(() {
                 _videoFilePath = filePath;
+                _initializeVideoPlayerFuture = _initializeVideoPlayer(filePath);
               });
 
               _videoFilePath = filePath;

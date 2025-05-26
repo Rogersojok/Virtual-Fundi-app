@@ -27,7 +27,7 @@ class _SessionsPageState extends State<SessionsPage> {
   void initState() {
     super.initState();
     _connectivity = Connectivity();
-    fetchData();
+    //fetchData();
     fetchLocalData();
     _searchController.addListener(_filterSessions);
   }

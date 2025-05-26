@@ -51,7 +51,7 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add subject and class')));
         }
       }catch(e){
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: Exist')));
       }
     } else {
       // Show an error message if the user didn't select both fields

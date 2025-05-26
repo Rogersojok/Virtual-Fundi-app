@@ -94,7 +94,7 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => ActivityPage(
-                              sessionId: widget.sessionId,
+                              sessionId: session.id,
                             ),
                           ),
                         );

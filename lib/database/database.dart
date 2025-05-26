@@ -399,7 +399,7 @@ class DatabaseHelper {
     WidgetsFlutterBinding.ensureInitialized();
     _database = await openDatabase(
       join(await getDatabasesPath(), 'virtual_Fundi.db'), //virtualFundiDb.db'
-      version: 14, // Increment the version number
+      version: 15, // Increment the version number
       onCreate: (db, version) {
         db.execute(
           'CREATE TABLE topics(id INTEGER PRIMARY KEY, topicName TEXT, topicCode TEXT, term TEXT, cat TEXT, subject TEXT, classTaught TEXT, dateCreated TEXT)',
@@ -417,13 +417,15 @@ class DatabaseHelper {
         db.execute(
           "CREATE TABLE class_subjects(id INTEGER PRIMARY KEY AUTOINCREMENT, class_name TEXT, subject_name TEXT, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id), UNIQUE(class_name, subject_name, user_id))",
         );
-
+        db.execute(
+          'CREATE TABLE teacherData(teacherId INTEGER PRIMARY KEY AUTOINCREMENT, teacherName TEXT, schoolName TEXT,classStream TEXT,topicCovered TEXT,sessionCovered TEXT,frequency TEXT,easeOfUse TEXT, digitalContentUsefulnes TEXT, prepTimeSaved TEXT, effectivenessOfIntruc TEXT, videoContentRatings TEXT, escVideoHelpfulness TEXT, confidenceInESC TEXT, escVideoPreparation TEXT, overallSatisfaction INTEGER, challenges TEXT, improvements TEXT, additionalComments TEXT, evaluationDate TEXT)',
+        );
 
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-          if(oldVersion < 14){
+          if(oldVersion < 15){
             db.execute(
-              'CREATE TABLE teacherData(teacherId INTEGER PRIMARY KEY AUTOINCREMENT, teacherName TEXT, schoolName TEXT,classStream TEXT,topicCovered TEXT,sessionCovered TEXT,frequency TEXT,easeOfUse TEXT, digitalContentUsefulnes TEXT, prepTimeSaved TEXT, effectivenessOfIntruc TEXT, videoContentRatings TEXT, escVideoHelpfulness TEXT, confidenceInESC TEXT, escVideoPreparation TEXT, overallSatisfaction INTEGER, challenges TEXT, improvements TEXT, additionalComments TEXT, evaluationDate TEXT)',
+              'CREATE TABLE IF NOT EXISTS teacherData(teacherId INTEGER PRIMARY KEY AUTOINCREMENT, teacherName TEXT, schoolName TEXT,classStream TEXT,topicCovered TEXT,sessionCovered TEXT,frequency TEXT,easeOfUse TEXT, digitalContentUsefulnes TEXT, prepTimeSaved TEXT, effectivenessOfIntruc TEXT, videoContentRatings TEXT, escVideoHelpfulness TEXT, confidenceInESC TEXT, escVideoPreparation TEXT, overallSatisfaction INTEGER, challenges TEXT, improvements TEXT, additionalComments TEXT, evaluationDate TEXT)',
             );
           }
       },
@@ -674,6 +676,36 @@ class DatabaseHelper {
     });
 
   }
+
+  // Retrieve all activities with mediaType == 'video' and realVideo != 'placeholder'
+  Future<List<Activity>> retrieveVideoActivities() async {
+    final db = await _database;
+    final List<Map<String, dynamic>> maps = await db!.query(
+      'activities',
+      where: 'mediaType = ? AND realVideo == ?',
+      whereArgs: ['video', 'realvideo'],
+    );
+
+    return List.generate(maps.length, (index) {
+      return Activity(
+        id: maps[index]['id'],
+        title: maps[index]['title'],
+        session: maps[index]['session'],
+        teacherActivity: maps[index]['teacherActivity'],
+        studentActivity: maps[index]['studentActivity'],
+        mediaType: maps[index]['mediaType'],
+        time: maps[index]['time'],
+        notes: maps[index]['notes'],
+        image: maps[index]['image'],
+        imageTitle: maps[index]['imageTitle'],
+        video: maps[index]['video'],
+        videoTitle: maps[index]['videoTitle'],
+        realVideo: maps[index]['realVideo'],
+        createdAt: DateTime.parse(maps[index]['createdAt']),
+      );
+    });
+  }
+
 
   Future<void> updateActivity(Activity activity) async {
     final db = await _database;
