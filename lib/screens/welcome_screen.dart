@@ -3,9 +3,7 @@ import 'package:virtualfundi/screens/signin_screen.dart';
 import 'package:virtualfundi/screens/signup_screen.dart';
 import 'package:virtualfundi/widgets/welcome_button.dart';
 import 'package:virtualfundi/services/post_service.dart';
-
 import 'package:virtualfundi/theme/theme.dart';
-
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -13,7 +11,6 @@ class WelcomeScreen extends StatefulWidget {
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
-
 
 class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
@@ -24,7 +21,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize animations
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -34,7 +31,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -42,7 +39,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       parent: _fadeController,
       curve: Curves.easeInOut,
     ));
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -50,11 +47,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       parent: _slideController,
       curve: Curves.easeOutCubic,
     ));
-    
+
     // Start animations
     _fadeController.forward();
     _slideController.forward();
-    
+
     // Initialize app
     AppInitializationService().runInitialization(context);
   }
@@ -69,7 +66,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -124,7 +121,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                 children: [
                   // Top Spacer
                   SizedBox(height: size.height * 0.1),
-                  
+
                   // Welcome Content
                   Expanded(
                     flex: 3,
@@ -161,9 +158,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                                   ),
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 32),
-                              
+
                               // App Title with Modern Typography
                               ShaderMask(
                                 shaderCallback: (bounds) => LinearGradient(
@@ -196,9 +193,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                                   ),
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 24),
-                              
+
                               // Subtitle
                               Text(
                                 'www.fundibots.org',
@@ -211,9 +208,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                                   height: 1.4,
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 16),
-                              
+
                               // Feature highlights
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -269,7 +266,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                       ),
                     ),
                   ),
-                  
+
                   // Bottom Buttons Section
                   Expanded(
                     flex: 1,
@@ -305,9 +302,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                                 ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 16),
-                            
+
                             // Terms and Privacy
                             Text(
                               'By continuing, you agree to our Terms & Privacy Policy',

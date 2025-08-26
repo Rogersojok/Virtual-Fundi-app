@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../screens/feedback_screen.dart';
 import 'package:virtualfundi/screens/adminLogin.dart';
-<<<<<<< HEAD
-=======
+
 import 'package:virtualfundi/theme/theme.dart';
->>>>>>> 1891d8541ed5d85d0edbddefabef361373e2fcc6
+
 
 class CustomScaffold extends StatelessWidget {
   final Widget? child;
@@ -25,64 +24,6 @@ class CustomScaffold extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       drawer: Drawer(
-<<<<<<< HEAD
-        child: Column(
-          children: [
-            UserAccountsDrawerHeader(
-              accountName: Text('Sarah Abs'),
-              accountEmail: Text('sarah@abs.com'),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: AssetImage('assets/profile.PNG'), // Replace with your image path
-              ),
-              decoration: BoxDecoration(
-                color: Color(0xFF6A0DAD), // Purple background
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.home, color: Colors.black),
-                    title: Text('Home'),
-                    onTap: () {
-                      // Add navigation for home here
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.favorite, color: Colors.black),
-                    title: Text('Favourites'),
-                    onTap: () {
-                      // Add navigation for favourites here
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.work_outline, color: Colors.black),
-                    title: Text('Workflow'),
-                    onTap: () {
-                      // Add navigation for workflow here
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.update, color: Colors.black),
-                    title: Text('Updates'),
-                    onTap: () {
-                      // Add navigation for updates here
-                    },
-                  ),
-                  Divider(),
-                  ListTile(
-                    leading: Icon(Icons.extension, color: Colors.black),
-                    title: Text('Plugins'),
-                    onTap: () {
-                      // Add navigation for plugins here
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.notifications, color: Colors.black),
-                    title: Text('Feedback'),
-                    onTap: () {
-                      // Navigate to FeedbackScreen when "Feedback" is tapped
-=======
         elevation: 16,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
@@ -212,27 +153,18 @@ class CustomScaffold extends StatelessWidget {
                     title: 'Feedback',
                     onTap: () {
                       Navigator.pop(context);
->>>>>>> 1891d8541ed5d85d0edbddefabef361373e2fcc6
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => FeedbackScreen()),
                       );
                     },
                   ),
-<<<<<<< HEAD
-                  ListTile(
-                    leading: Icon(Icons.admin_panel_settings, color: Colors.black),
-                    title: Text('Admin'),
-                    onTap: () {
-                      // Navigate to FeedbackScreen when "Feedback" is tapped
-=======
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.admin_panel_settings_rounded,
                     title: 'Admin',
                     onTap: () {
                       Navigator.pop(context);
->>>>>>> 1891d8541ed5d85d0edbddefabef361373e2fcc6
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AdminLoginPage()),
@@ -242,8 +174,6 @@ class CustomScaffold extends StatelessWidget {
                 ],
               ),
             ),
-<<<<<<< HEAD
-=======
             // Footer section with app version or additional info
             Container(
               padding: const EdgeInsets.all(16),
@@ -274,7 +204,6 @@ class CustomScaffold extends StatelessWidget {
                 ],
               ),
             ),
->>>>>>> 1891d8541ed5d85d0edbddefabef361373e2fcc6
           ],
         ),
       ),
@@ -308,8 +237,7 @@ class CustomScaffold extends StatelessWidget {
       body: child ?? const SizedBox.shrink(),
     );
   }
-<<<<<<< HEAD
-=======
+
 
   Widget _buildDrawerItem({
     required BuildContext context,
@@ -364,5 +292,4 @@ class CustomScaffold extends StatelessWidget {
       ),
     );
    }
->>>>>>> 1891d8541ed5d85d0edbddefabef361373e2fcc6
 }
