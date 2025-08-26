@@ -67,7 +67,8 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(userId: 1), // Replace with actual userId
+
+            builder: (context) => HomeScreen(userId: widget.userId),
           ),
         );
       },
@@ -83,12 +84,21 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
             flex: 7,
             child: Container(
               padding: const EdgeInsets.fromLTRB(25.0, 50.0, 25.0, 20.0),
-              decoration: const BoxDecoration(
+
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(40.0),
                   topRight: Radius.circular(40.0),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 15,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
               ),
 
               child: SingleChildScrollView(
@@ -98,13 +108,23 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // get started text
-                      const Text(
-                        'Add Subject and class',
-                        style: TextStyle(
-                          fontSize: 30.0,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.orange,
+                      // Title with gradient text
+                      ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          colors: [
+                            AppColors.primaryOrange,
+                            AppColors.primaryOrange.withOpacity(0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ).createShader(bounds),
+                        child: const Text(
+                          'Add Subject and Class',
+                          style: TextStyle(
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(
@@ -114,48 +134,123 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
                       const SizedBox(
                         height: 40.0,
                       ),
-                      // full name
-                      DropdownButtonFormField<String>(
-                        decoration: InputDecoration(labelText: 'Subject'),
-                        value: _selectedSubject,
-                        items: _subjects.map((String subject) {
-                          return DropdownMenuItem<String>(
-                            value: subject,
-                            child: Text(subject),
-                          );
-                        }).toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            _selectedSubject = newValue;
-                          });
-                        },
+
+                      // Subject dropdown with improved styling
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Subject',
+                            labelStyle: TextStyle(color: AppColors.textSecondary),
+                            prefixIcon: Icon(Icons.book, color: AppColors.primaryOrange),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          ),
+                          value: _selectedSubject,
+                          icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.primaryOrange),
+                          dropdownColor: Colors.white,
+                          items: _subjects.map((String subject) {
+                            return DropdownMenuItem<String>(
+                              value: subject,
+                              child: Text(subject),
+                            );
+                          }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _selectedSubject = newValue;
+                            });
+                          },
+                        ),
                       ),
-                      //School
-                      DropdownButtonFormField<String>(
-                        decoration: InputDecoration(labelText: 'Class'),
-                        value: _selectedClass,
-                        items: _classes.map((String className) {
-                          return DropdownMenuItem<String>(
-                            value: className,
-                            child: Text(className),
-                          );
-                        }).toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            _selectedClass = newValue;
-                          });
-                        },
+                      // Class dropdown with improved styling
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Class',
+                            labelStyle: TextStyle(color: AppColors.textSecondary),
+                            prefixIcon: Icon(Icons.school, color: AppColors.primaryOrange),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          ),
+                          value: _selectedClass,
+                          icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.primaryOrange),
+                          dropdownColor: Colors.white,
+                          items: _classes.map((String className) {
+                            return DropdownMenuItem<String>(
+                              value: className,
+                              child: Text(className),
+                            );
+                          }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _selectedClass = newValue;
+                            });
+                          },
+                        ),
                       ),
                       const SizedBox(
                         height: 25.0,
                       ),
 
-                      // add button
-                      SizedBox(
+                      // Modern save button
+                      Container(
                         width: double.infinity,
-                        child: AnimatedElevatedButton(
+                        height: 50,
+                        margin: const EdgeInsets.only(top: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primaryOrange,
+                              AppColors.primaryOrange.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryOrange.withOpacity(0.3),
+                              blurRadius: 12,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
                           onPressed: _add_subject_class,
-                          text: "Save",
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            "Save",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(
@@ -183,7 +278,8 @@ class _Add_Subject_ClassState extends State<Add_Subject_Class> {
                               'Back to Topics',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: lightColorScheme.primary,
+                                color: AppColors.primaryOrange,
+                                fontSize: 14,
                               ),
                             ),
                           ),
@@ -234,41 +330,101 @@ class _showSubjectClassState extends State<showSubjectClass> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 100.0,
-      child: Scaffold(
-
-        body: FutureBuilder<List<ClassSubject>>(
-          future: dbHelper.getClassSubjectsForUser(widget.userId),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              print(snapshot);
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('No class subjects found for this user.'));
-            } else {
-              return Column(
-                children: [
-                  Expanded(
-
-                    child: ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        var classSubject = snapshot.data![index];
-                        return ListTile(
-                          title: Text('Subject: ${classSubject.subjectName}'),
-                          subtitle: Text('Class: ${classSubject.className}'),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              );
-            }
-          },
+    return Container(
+      height: 120.0,
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
         ),
+      ),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              children: [
+                Icon(Icons.list_alt_rounded, color: AppColors.primaryOrange, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Your Subjects & Classes',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<ClassSubject>>(
+              future: dbHelper.getClassSubjectsForUser(widget.userId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator(color: AppColors.primaryOrange));
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error: ${snapshot.error}',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  );
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No subjects or classes added yet',
+                      style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+                    ),
+                  );
+                } else {
+                  return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    itemBuilder: (context, index) {
+                      var classSubject = snapshot.data![index];
+                      return Card(
+                        elevation: 0,
+                        color: Colors.white,
+                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          leading: CircleAvatar(
+                            backgroundColor: AppColors.primaryOrange.withOpacity(0.1),
+                            child: Icon(
+                              Icons.book_outlined,
+                              color: AppColors.primaryOrange,
+                              size: 18,
+                            ),
+                          ),
+                          title: Text(
+                            classSubject.subjectName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Class: ${classSubject.className}',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

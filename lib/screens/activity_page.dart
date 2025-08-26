@@ -22,7 +22,9 @@ import 'package:virtualfundi/services/access_token.dart';
 
 class ActivityPage extends StatefulWidget {
   final int sessionId;
-  ActivityPage({required this.sessionId});
+
+  const ActivityPage({super.key, required this.sessionId});
+
 
   @override
   _ActivityPageState createState() => _ActivityPageState();
@@ -225,6 +227,7 @@ class _ActivityPageState extends State<ActivityPage> {
       var response = await httpClient.send(request);
 
       var activity_response = await http.get(Uri.parse(
+
           'https://fbappliedscience.com/api/${activities[currentIndex]['id']}'),
         headers: {
           'Authorization': 'Token $token', // Add token to request
@@ -234,6 +237,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
       final Map<String, dynamic> data = json.decode(activity_response.body);
       print(activity_response.body);
+
 
       if(data['real_video'] == "placeholder"){
         return "placeholder video";
@@ -270,7 +274,10 @@ class _ActivityPageState extends State<ActivityPage> {
               print('filePath in download function: $filePath');
 
               _videoFilePath = filePath;
+
               print('onDone _videofilepath ${_videoFilePath}');
+
+
 
               // update the database
               final dbHelper = DatabaseHelper();
@@ -420,131 +427,278 @@ class _ActivityPageState extends State<ActivityPage> {
       children: [
         if (activityEntries.isNotEmpty)
           _buildRow(activityEntries[currentTextIndex].key, activityEntries[currentTextIndex].value.toString()),
-        SizedBox(height: 20),
+
+        const SizedBox(height: 20),
       ],
     );
   }
 
   Widget _buildRow(String label, String value) {
     final customLabel = convertToReadableFormat(label);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.indigo.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            customLabel,
-            style: TextStyle(
-              fontWeight: FontWeight.w700, // Use bolder weight for a stronger presence
-              fontSize: 22, // Increase font size for prominence
-              color: Colors.black, // Retain beautiful accent color
-              letterSpacing: 1.2, // Add letter spacing for a contemporary look
-              fontFamily: 'Poppins', // Modern font family (ensure it's included in pubspec.yaml)
-              shadows: [
-                Shadow(
-                  blurRadius: 4.0, // Add subtle shadow for depth
-                  offset: Offset(2.0, 2.0), // Light direction for the shadow
-                  color: Colors.black26, // Light black shadow for a soft effect
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade600,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
+                child: Icon(
+                  _getIconForLabel(label),
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  customLabel,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    color: Colors.blue.shade800,
+                    letterSpacing: 0.8,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey.shade200,
+                width: 1,
+              ),
+            ),
+            child: Html(
+              data: value,
+              style: {
+                "body": Style(
+                  fontSize: FontSize(16),
+                  lineHeight: const LineHeight(1.6),
+                  color: Colors.grey.shade800,
+                  fontFamily: 'Roboto',
+                  letterSpacing: 0.3,
+                  textAlign: TextAlign.left,
+                  margin: Margins.zero,
+                  padding: HtmlPaddings.zero,
+                ),
+                "p": Style(
+                  margin: Margins.only(bottom: 8),
+                ),
+                "h1, h2, h3, h4, h5, h6": Style(
+                  color: Colors.blue.shade700,
+                  fontWeight: FontWeight.bold,
+                ),
+              },
             ),
           ),
-
-          SizedBox(height: 8),
-          Html(
-            data: value,
-            style: {
-              "body": Style(
-                fontSize: FontSize(16), // Slightly larger font size for readability
-                lineHeight: LineHeight(1.8), // Increased line height for a cleaner layout
-                color: Colors.black87, // Keep standard black for readability
-                fontFamily: 'Roboto', // Modern sans-serif font family
-                letterSpacing: 0.5, // Add slight letter spacing for a more polished look
-                textAlign: TextAlign.justify, // Justify text for cleaner text alignment
-                backgroundColor: Colors.white, // Light background for a fresher look
-              ),
-            },
-          ),
-
         ],
       ),
     );
   }
 
+  IconData _getIconForLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'teacheractivity':
+        return Icons.school;
+      case 'studentactivity':
+        return Icons.person;
+      case 'notes':
+        return Icons.note;
+      default:
+        return Icons.info;
+    }
+  }
+
   Widget _buildImageActivity(Map<String, dynamic> activity) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Use a Card with beautiful colors for modern look
-        Card(
-          elevation: 5.0,
-          margin: EdgeInsets.symmetric(vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade50, Colors.pink.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
-          color: Colors.blueGrey.shade50, // Light background for the card
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with icon
+            Row(
               children: [
-                Row(
-                  children: [
-                    Text(
-                      'Activity Name:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.teal, // Modern accent color
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        activity['title'] ?? '',
-                        style: TextStyle(fontSize: 16, color: Colors.indigo), // Indigos for text
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade600,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.image,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
-                SizedBox(height: 10),
-                Row(
-                  children: [
-                    Text(
-                      'Image Title:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.teal, // Consistent modern color
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        activity['image_title'] ?? '',
-                        style: TextStyle(fontSize: 16, color: Colors.indigo),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(activity['image'] ?? ''),
-                      width: 320,
-                      height: 200,
-                      fit: BoxFit.cover,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Image Activity',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple.shade800,
+                      letterSpacing: 0.5,
+
                     ),
                   ),
                 ),
               ],
             ),
-          ),
+
+            const SizedBox(height: 24),
+            
+            // Activity details
+            _buildInfoRow('Activity Name', activity['title'] ?? '', Icons.title),
+            const SizedBox(height: 16),
+            _buildInfoRow('Image Title', activity['imageTitle'] ?? '', Icons.label),
+            const SizedBox(height: 24),
+            
+            // Image container
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(
+                  File(activity['image'] ?? ''),
+                  height: 250,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 250,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Image not available',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
-        SizedBox(height: 16),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: Colors.purple.shade600,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '$label:',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade800,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -588,74 +742,133 @@ class _ActivityPageState extends State<ActivityPage> {
         // Video or Download Button Section
         Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Colors.white, Colors.white],
+            gradient: LinearGradient(
+              colors: [Colors.orange.shade50, Colors.red.shade50],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(20.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
             ],
+            border: Border.all(
+              color: Colors.orange.withOpacity(0.3),
+              width: 1,
+            ),
           ),
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(24.0),
           child: videoFilePath.isNotEmpty &&
               activities[currentIndex]['realVideo'] != "placeholder"
-              ? ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: VideoPlayerWidget(
-              videoFilePath: videoFilePath,
-              activity: currentActivity,
-            ),
-          )
-              : ElevatedButton(
-            onPressed: () async {
-              try {
-                String filePath = await downloadFile(
-                  dataVideoD[currentIndex]['video'],
-                      (progress) {
-                    setState(() {
-                      progressD = progress;
-                    });
-                  },
-                );
-                setState(() {
-                  videoFilePath = filePath;
-                });
-              } catch (error) {
-                print('Download error: $error');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              backgroundColor: Colors.blueAccent,
-              shadowColor: Colors.black38,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.download, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  activities[currentIndex]['realVideo'] == "placeholder"
-                      ? 'Update Placeholder Video $progressD%'
-                      : 'Download Video $progressD%',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              ? Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: VideoPlayerWidget(
+                      videoFilePath: videoFilePath,
+                      activity: currentActivity,
+                    ),
+                  ),
+                )
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        String filePath = await downloadFile(
+                          dataVideoD[currentIndex]['video'],
+                              (progress) {
+                            setState(() {
+                              progressD = progress;
+                            });
+                          },
+                        );
+                        setState(() {
+                          videoFilePath = filePath;
+                        });
+                      } catch (error) {
+                        print('Download error: $error');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      backgroundColor: Colors.orange.shade600,
+                      foregroundColor: Colors.white,
+                      elevation: 8,
+                      shadowColor: Colors.orange.withOpacity(0.4),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.download,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                activities[currentIndex]['realVideo'] == "placeholder"
+                                    ? 'Update Placeholder Video'
+                                    : 'Download Video',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              if (progressD > 0)
+                                Text(
+                                  '$progressD% completed',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (progressD > 0)
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(
+                              value: progressD / 100,
+                              backgroundColor: Colors.white.withOpacity(0.3),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth: 3,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
         ),
         const SizedBox(height: 16),
       ],
@@ -676,7 +889,8 @@ class _ActivityPageState extends State<ActivityPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => EndOfSessionPage(totalActivity: totalActicities,),
+
+            builder: (context) => EndOfSessionPage(totalActivity: totalActicities, activities: activities),
           ),
         );
       }
@@ -722,10 +936,68 @@ class _ActivityPageState extends State<ActivityPage> {
     });
   }
 
+  Widget _buildNavigationButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+    required bool isEnabled,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isEnabled 
+              ? [Colors.blue.shade600, Colors.indigo.shade600]
+              : [Colors.grey.shade300, Colors.grey.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: isEnabled ? [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ] : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isEnabled ? onPressed : null,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScaffold(
+
+        title: activities.isNotEmpty ? activities[currentIndex]['title'] ?? 'Activity' : 'Loading...',
         child: Column(
           children: [
             const Expanded(
@@ -749,40 +1021,109 @@ class _ActivityPageState extends State<ActivityPage> {
                     children: [
                       const SizedBox(height: 20.0),
 
-                      const SizedBox(height: 20.0),
-                      LinearProgressWidget(value: progressValue, total: totalActicities,),
-                      const SizedBox(height: 20.0),
+                      LinearProgressWidget(value: progressValue, total: totalActicities),
+                      const SizedBox(height: 12.0),
                       // Display either loading indicator or activity widget
                       activities.isEmpty
-                          ? CircularProgressIndicator() // Display loading indicator while fetching data
-                          : Card(
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: _buildActivityWidget(
-                              activities[currentIndex]), // Replace this with your activity widget
-                        ),
-                      ),
+                          ? Container(
+                              padding: const EdgeInsets.all(40),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    'Loading activities...',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: _buildActivityWidget(activities[currentIndex]),
+                              ),
+                            ),
                       const SizedBox(height: 20.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            onPressed: activities[currentIndex]['mediaType'] == "text" ? previousTextElement : previousActivity,
-                            icon: Icon(Icons.arrow_back), // Left arrow icon
-                            tooltip: 'Previous', // Tooltip for accessibility
-                            color: Colors.black, // Customize the color as needed
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue.shade50, Colors.indigo.shade50],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
-                          IconButton(
-                            onPressed: activities[currentIndex]['mediaType'] == "text" ? nextTextElement : nextActivity,
-                            icon: Icon(Icons.arrow_forward), // Right arrow icon
-                            tooltip: 'Next', // Tooltip for accessibility
-                            color: Colors.black, // Customize the color as needed
-                          ),
-                        ],
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildNavigationButton(
+                              onPressed: activities[currentIndex]['mediaType'] == "text" ? previousTextElement : previousActivity,
+                              icon: Icons.arrow_back_ios,
+                              label: 'Previous',
+                              isEnabled: currentIndex > 0 || (activities[currentIndex]['mediaType'] == "text" && currentTextIndex > 0),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade600,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${currentIndex + 1} of ${activities.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            _buildNavigationButton(
+                              onPressed: activities[currentIndex]['mediaType'] == "text" ? nextTextElement : nextActivity,
+                              icon: (currentIndex == activities.length - 1 && activities[currentIndex]['mediaType'] != "text") || 
+                                    (activities[currentIndex]['mediaType'] == "text" && currentTextIndex == textElementsToSkip.length - 1 && textElementsToSkip[currentTextIndex] != 'notes') 
+                                    ? Icons.flag : Icons.arrow_forward_ios,
+                              label: (currentIndex == activities.length - 1 && activities[currentIndex]['mediaType'] != "text") || 
+                                     (activities[currentIndex]['mediaType'] == "text" && currentTextIndex == textElementsToSkip.length - 1 && textElementsToSkip[currentTextIndex] != 'notes') 
+                                     ? 'End of Session' : 'Next',
+                              isEnabled: true,
+                            ),
+                          ],
+                        ),
+
                       ),
 
                       const SizedBox(height: 20.0),
@@ -796,11 +1137,691 @@ class _ActivityPageState extends State<ActivityPage> {
       ),
     );
   }
+
+
+  IconData _getActivityIcon(String mediaType) {
+    switch (mediaType.toLowerCase()) {
+      case 'video':
+        return Icons.play_circle_fill;
+      case 'image':
+        return Icons.image;
+      case 'text':
+        return Icons.article;
+      default:
+        return Icons.assignment;
+    }
+  }
 }
 
-class EndOfSessionPage extends StatelessWidget {
+class EndOfSessionPage extends StatefulWidget {
   final int totalActivity;
-  EndOfSessionPage({required this.totalActivity});
+  final List<Map<String, dynamic>> activities;
+  const EndOfSessionPage({super.key, required this.totalActivity, required this.activities});
+
+  @override
+  _EndOfSessionPageState createState() => _EndOfSessionPageState();
+}
+
+class _EndOfSessionPageState extends State<EndOfSessionPage> {
+  int _rating = 0;
+  final TextEditingController _feedbackController = TextEditingController();
+  bool _feedbackSubmitted = false;
+  
+  // Attendance tracking variables
+  final TextEditingController _girlsCountController = TextEditingController();
+  final TextEditingController _totalGirlsController = TextEditingController();
+  final TextEditingController _boysCountController = TextEditingController();
+  final TextEditingController _totalBoysController = TextEditingController();
+  bool _attendanceSubmitted = false;
+
+  @override
+  void dispose() {
+    _feedbackController.dispose();
+    _girlsCountController.dispose();
+    _totalGirlsController.dispose();
+    _boysCountController.dispose();
+    _totalBoysController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildStarRating() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (index) {
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _rating = index + 1;
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              index < _rating ? Icons.star : Icons.star_border,
+              color: index < _rating ? Colors.amber.shade600 : Colors.grey.shade400,
+              size: 40,
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  void _submitFeedback() {
+    if (_rating > 0) {
+      // Here you would typically save the rating and feedback to your database
+      setState(() {
+        _feedbackSubmitted = true;
+      });
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Thank you for your feedback!'),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      
+      // Show attendance tracking modal after feedback submission
+      _showAttendanceModal();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please provide a rating before submitting'),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+  
+  void _showAttendanceModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 16,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade50, Colors.indigo.shade50],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.purple.shade600, Colors.indigo.shade600],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.people,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Text(
+                            'Track Attendance',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Girls Section
+                    _buildAttendanceSection(
+                      'Girls',
+                      Icons.female,
+                      Colors.pink,
+                      _girlsCountController,
+                      _totalGirlsController,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Boys Section
+                    _buildAttendanceSection(
+                      'Boys',
+                      Icons.male,
+                      Colors.blue,
+                      _boysCountController,
+                      _totalBoysController,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              backgroundColor: Colors.grey.shade300,
+                              foregroundColor: Colors.grey.shade700,
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                           child: ElevatedButton(
+                             onPressed: () {
+                               if (_validateAttendanceInput()) {
+                                 _submitAttendance();
+                                 Navigator.of(context).pop();
+                               }
+                             },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              backgroundColor: Colors.purple.shade600,
+                              foregroundColor: Colors.white,
+                              elevation: 4,
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Submit',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+   
+   Widget _buildAttendanceSection(
+     String title,
+     IconData icon,
+     MaterialColor color,
+     TextEditingController presentController,
+     TextEditingController totalController,
+   ) {
+     return Container(
+       padding: const EdgeInsets.all(16),
+       decoration: BoxDecoration(
+         color: Colors.white,
+         borderRadius: BorderRadius.circular(12),
+         border: Border.all(
+           color: color.withOpacity(0.3),
+           width: 1,
+         ),
+         boxShadow: [
+           BoxShadow(
+             color: Colors.black.withOpacity(0.05),
+             blurRadius: 8,
+             offset: const Offset(0, 2),
+           ),
+         ],
+       ),
+       child: Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           Row(
+             children: [
+               Container(
+                 padding: const EdgeInsets.all(8),
+                 decoration: BoxDecoration(
+                   color: color.shade100,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child: Icon(
+                   icon,
+                   color: color.shade600,
+                   size: 20,
+                 ),
+               ),
+               const SizedBox(width: 12),
+               Text(
+                 title,
+                 style: TextStyle(
+                   fontSize: 16,
+                   fontWeight: FontWeight.w600,
+                   color: color.shade700,
+                 ),
+               ),
+             ],
+           ),
+           const SizedBox(height: 16),
+           Row(
+             children: [
+               Expanded(
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Text(
+                       'Present',
+                       style: TextStyle(
+                         fontSize: 12,
+                         fontWeight: FontWeight.w500,
+                         color: Colors.grey.shade600,
+                       ),
+                     ),
+                     const SizedBox(height: 4),
+                     TextField(
+                       controller: presentController,
+                       keyboardType: TextInputType.number,
+                       decoration: InputDecoration(
+                         hintText: '0',
+                         border: OutlineInputBorder(
+                           borderRadius: BorderRadius.circular(8),
+                           borderSide: BorderSide(color: Colors.grey.shade300),
+                         ),
+                         focusedBorder: OutlineInputBorder(
+                           borderRadius: BorderRadius.circular(8),
+                           borderSide: BorderSide(color: color.shade400, width: 2),
+                         ),
+                         contentPadding: const EdgeInsets.symmetric(
+                           horizontal: 12,
+                           vertical: 8,
+                         ),
+                       ),
+                     ),
+                   ],
+                 ),
+               ),
+               const SizedBox(width: 16),
+               const Text(
+                 'out of',
+                 style: TextStyle(
+                   fontSize: 14,
+                   color: Colors.grey,
+                   fontWeight: FontWeight.w500,
+                 ),
+               ),
+               const SizedBox(width: 16),
+               Expanded(
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Text(
+                       'Total',
+                       style: TextStyle(
+                         fontSize: 12,
+                         fontWeight: FontWeight.w500,
+                         color: Colors.grey.shade600,
+                       ),
+                     ),
+                     const SizedBox(height: 4),
+                     TextField(
+                       controller: totalController,
+                       keyboardType: TextInputType.number,
+                       decoration: InputDecoration(
+                         hintText: '0',
+                         border: OutlineInputBorder(
+                           borderRadius: BorderRadius.circular(8),
+                           borderSide: BorderSide(color: Colors.grey.shade300),
+                         ),
+                         focusedBorder: OutlineInputBorder(
+                           borderRadius: BorderRadius.circular(8),
+                           borderSide: BorderSide(color: color.shade400, width: 2),
+                         ),
+                         contentPadding: const EdgeInsets.symmetric(
+                           horizontal: 12,
+                           vertical: 8,
+                         ),
+                       ),
+                     ),
+                   ],
+                 ),
+               ),
+             ],
+           ),
+         ],
+       ),
+     );
+   }
+   
+   bool _validateAttendanceInput() {
+      // Validate girls attendance
+      int? girlsPresent = int.tryParse(_girlsCountController.text);
+      int? totalGirls = int.tryParse(_totalGirlsController.text);
+      int? boysPresent = int.tryParse(_boysCountController.text);
+      int? totalBoys = int.tryParse(_totalBoysController.text);
+      
+      // Check if all fields have valid numbers
+      if (girlsPresent == null || totalGirls == null || boysPresent == null || totalBoys == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please enter valid numbers for all fields'),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return false;
+      }
+      
+      // Check if present count doesn't exceed total
+      if (girlsPresent > totalGirls) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Girls present cannot exceed total girls'),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return false;
+      }
+      
+      if (boysPresent > totalBoys) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Boys present cannot exceed total boys'),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return false;
+      }
+      
+      // Check for negative numbers
+      if (girlsPresent < 0 || totalGirls < 0 || boysPresent < 0 || totalBoys < 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Attendance numbers cannot be negative'),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return false;
+      }
+      
+      return true;
+    }
+    
+    void _submitAttendance() {
+      // Get the attendance data
+      int girlsPresent = int.tryParse(_girlsCountController.text) ?? 0;
+      int totalGirls = int.tryParse(_totalGirlsController.text) ?? 0;
+      int boysPresent = int.tryParse(_boysCountController.text) ?? 0;
+      int totalBoys = int.tryParse(_totalBoysController.text) ?? 0;
+     
+     // Here you would typically save the attendance data to your database
+     setState(() {
+       _attendanceSubmitted = true;
+     });
+     
+     // Show success message with attendance summary
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(
+         content: Text(
+           'Attendance recorded: Girls $girlsPresent/$totalGirls, Boys $boysPresent/$totalBoys',
+         ),
+         backgroundColor: Colors.green.shade600,
+         behavior: SnackBarBehavior.floating,
+         duration: const Duration(seconds: 4),
+       ),
+     );
+     
+     // Clear the controllers for next use
+     _girlsCountController.clear();
+     _totalGirlsController.clear();
+     _boysCountController.clear();
+     _totalBoysController.clear();
+   }
+
+  Widget _buildTeacherFeedbackSection() {
+    // Filter activities that have teacher feedback
+    List<Map<String, dynamic>> activitiesWithFeedback = widget.activities
+        .where((activity) => activity['teacherActivity'] != null && 
+                            activity['teacherActivity'].toString().trim().isNotEmpty)
+        .toList();
+
+    if (activitiesWithFeedback.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade50, Colors.indigo.shade50],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.blue.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade600,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.school,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Teacher\'s Feedback',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No teacher feedback available for this session.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.indigo.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade600,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.school,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Teacher\'s Feedback',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...activitiesWithFeedback.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> activity = entry.value;
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.blue.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade100,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Activity ${index + 1}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          activity['title'] ?? 'Untitled Activity',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Html(
+                    data: activity['teacherActivity'],
+                    style: {
+                      "body": Style(
+                        fontSize: FontSize(14),
+                        lineHeight: const LineHeight(1.5),
+                        color: Colors.grey.shade800,
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                      ),
+                      "p": Style(
+                        margin: Margins.only(bottom: 8),
+                      ),
+                      "h1, h2, h3, h4, h5, h6": Style(
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    },
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -825,33 +1846,268 @@ class EndOfSessionPage extends StatelessWidget {
                 ),
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 20.0),
-                      Text(
-                        'End of Session',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue, // Update this color as needed
+                      const SizedBox(height: 40.0),
+                      
+                      LinearProgressWidget(value: widget.totalActivity, total: widget.totalActivity),
+                      
+                      const SizedBox(height: 32),
+                      
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue.shade50, Colors.indigo.shade50],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.blue.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          'You have successfully completed all ${widget.totalActivity} activities in this session. Great job on your learning journey!',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade700,
+                            height: 1.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      LinearProgressWidget(value: totalActivity, total: totalActivity,),
-                      const SizedBox(height: 20.0),
-                      Text(
-                        'Congratulations! You have completed all activities in this session.',
-                        style: TextStyle(
-                          fontSize: 18,
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Rating Section
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.amber.shade50, Colors.orange.shade50],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.amber.withOpacity(0.3),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade600,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.star,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Rate This Session',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.amber.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'How would you rate your learning experience?',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildStarRating(),
+                            if (_rating > 0) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                _rating == 1 ? 'Poor' :
+                                _rating == 2 ? 'Fair' :
+                                _rating == 3 ? 'Good' :
+                                _rating == 4 ? 'Very Good' : 'Excellent',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.amber.shade700,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 20.0),
-                      AnimatedElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                        },
-                        text: 'Back',
+                      
+                      const SizedBox(height: 24),
+                      
+                      // User Feedback Section
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.purple.shade50, Colors.indigo.shade50],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.3),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.shade600,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.rate_review,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Your Feedback',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.purple.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Would you feel the need to adjust anything?',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.grey.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _feedbackController,
+                                maxLines: 4,
+                                decoration: InputDecoration(
+                                  hintText: 'Share your thoughts, suggestions, or areas for improvement...',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 14,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.all(16),
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _feedbackSubmitted ? null : _submitFeedback,
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  backgroundColor: _feedbackSubmitted 
+                                      ? Colors.green.shade600 
+                                      : Colors.purple.shade600,
+                                  foregroundColor: Colors.white,
+                                  elevation: 4,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _feedbackSubmitted ? Icons.check_circle : Icons.send,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _feedbackSubmitted ? 'Feedback Submitted' : 'Submit Feedback',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Teacher Feedback Section
+                      _buildTeacherFeedbackSection(),
+                      
+                      const SizedBox(height: 40),
+                      
+                      SizedBox(
+                        width: double.infinity,
+                        child: AnimatedElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          },
+                          text: 'Back to Sessions',
+                        ),
+                      ),
+
                       const SizedBox(height: 20.0),
                     ],
                   ),
@@ -871,7 +2127,9 @@ class LinearProgressWidget extends StatelessWidget {
   final int value;
   final int total;
 
-  LinearProgressWidget({required this.value, required this.total});
+
+  const LinearProgressWidget({super.key, required this.value, required this.total});
+
 
   double mapValueToProgress(int value, int t) {
     print('value $value');
@@ -884,18 +2142,102 @@ class LinearProgressWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('Progress: $value/$total'),
-        SizedBox(height: 10),
-        LinearProgressIndicator(
-          value: mapValueToProgress(value, total),
-          backgroundColor: Colors.grey[200],
-          color: Colors.blue,
-          minHeight: 10,
+
+    final progress = mapValueToProgress(value, total);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade50, Colors.teal.shade50],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-      ],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade600,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(
+                      Icons.trending_up,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Progress',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade800,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade600,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$value/$total',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 8,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              color: Colors.grey.shade200,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.transparent,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  progress < 0.5 ? Colors.orange.shade600 : Colors.green.shade600,
+                ),
+                minHeight: 8,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${(progress * 100).toInt()}% Complete',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -62,11 +62,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
+          // Background Image with overlay
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/background.jpeg',
-              fit: BoxFit.cover,
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/background.jpeg'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Container(
+                color: Colors.black.withOpacity(0.5), // Dark overlay for better contrast
+              ),
             ),
           ),
           Center(
@@ -81,11 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Container(
                       padding: const EdgeInsets.all(20.0),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.blue.withOpacity(0.8), Colors.blueAccent.withOpacity(0.6)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(25.0),
                         boxShadow: [
                           BoxShadow(
@@ -107,7 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 style: TextStyle(
                                   fontSize: 28.0,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -142,18 +145,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _buildAgreementCheckbox(),
                                 const SizedBox(height: 20.0),
                                 // Signup Button
-                                ElevatedButton(
-                                  onPressed: _signup,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(vertical: 15),
-                                    textStyle: const TextStyle(fontSize: 16),
+                                Container(
+                                  width: double.infinity,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    borderRadius: BorderRadius.circular(15),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        spreadRadius: 0,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  child: const Text('Sign Up'),
+                                  child: ElevatedButton(
+                                    onPressed: _signup,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Sign Up',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+
                                 ),
                                 const SizedBox(height: 20.0),
                                 _buildAlreadyHaveAccount(),
@@ -179,6 +205,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required String label,
     required String hintText,
   }) {
+
+    
+  // Helper method to get prefix icon based on field type
+  Icon? _getPrefixIconForField(String label) {
+    switch (label.toLowerCase()) {
+      case 'full name':
+        return Icon(Icons.person_outline);
+      case 'school':
+        return Icon(Icons.school_outlined);
+      case 'email':
+        return Icon(Icons.email_outlined);
+      default:
+        return null;
+    }
+  }
+
     return TextFormField(
       controller: controller,
       validator: (value) {
@@ -190,14 +232,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
-        hintStyle: const TextStyle(color: Colors.white70),
-        labelStyle: const TextStyle(color: Colors.white),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.2),
+
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        prefixIcon: _getPrefixIconForField(label),
       ),
     );
   }
@@ -216,18 +255,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       decoration: InputDecoration(
         labelText: 'Password',
         hintText: 'Enter your password',
-        hintStyle: const TextStyle(color: Colors.white70),
-        labelStyle: const TextStyle(color: Colors.white),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.2),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        prefixIcon: Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
-            _passwordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Colors.white70,
+            _passwordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
           ),
           onPressed: () {
             setState(() {
@@ -250,7 +284,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               agreePersonalData = value!;
             });
           },
-          activeColor: Colors.blueAccent,
+          activeColor: Colors.blue,
         ),
         const Text(
           'I agree to the processing of Personal Data',
@@ -282,7 +316,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             'Sign In',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.blueAccent,
+
+              color: Colors.blue,
             ),
           ),
         ),

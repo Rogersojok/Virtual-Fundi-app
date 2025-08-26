@@ -28,6 +28,10 @@ class TopicsScreen extends StatelessWidget {
       body: CustomScaffold(
         child: Column(
           children: [
+
+            // Add padding to account for AppBar height
+            SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
+
             const Expanded(
               flex: 1,
               child: SizedBox(

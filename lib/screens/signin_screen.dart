@@ -97,18 +97,12 @@ class _SignInScreenState extends State<SignInScreen> {
                     Container(
                       padding: const EdgeInsets.all(20.0),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.purple.shade300.withOpacity(0.9), // Lighter purple
-                            Colors.purple.shade600.withOpacity(0.8), // Darker purple
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(20.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withOpacity(0.1),
                             spreadRadius: 2,
                             blurRadius: 10,
                             offset: Offset(0, 5),
@@ -126,14 +120,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 style: TextStyle(
                                   fontSize: 26.0,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      blurRadius: 10,
-                                      color: Colors.black38,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -157,15 +144,10 @@ class _SignInScreenState extends State<SignInScreen> {
                                   decoration: InputDecoration(
                                     labelText: 'Username',
                                     hintText: 'Enter your username',
-                                    hintStyle: TextStyle(color: Colors.white70),
-                                    labelStyle: TextStyle(color: Colors.white),
+                                    prefixIcon: Icon(Icons.person_outline),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    filled: true,
-                                    fillColor: Colors.white.withOpacity(0.1),
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 12),
                                   ),
                                 ),
                                 const SizedBox(height: 20.0),
@@ -182,21 +164,16 @@ class _SignInScreenState extends State<SignInScreen> {
                                   decoration: InputDecoration(
                                     labelText: 'Password',
                                     hintText: 'Enter your password',
-                                    hintStyle: TextStyle(color: Colors.white70),
-                                    labelStyle: TextStyle(color: Colors.white),
+
+                                    prefixIcon: Icon(Icons.lock_outline),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    filled: true,
-                                    fillColor: Colors.white.withOpacity(0.1),
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 12),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscurePassword
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                        color: Colors.white,
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
                                       ),
                                       onPressed: () {
                                         setState(() {
@@ -208,24 +185,40 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ),
                                 const SizedBox(height: 20.0),
                                 // Login Button
-                                ElevatedButton(
-                                  onPressed: _login,
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.green,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    padding:
-                                    EdgeInsets.symmetric(vertical: 15),
-                                    textStyle: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    shadowColor: Colors.black54,
-                                    elevation: 6,
+                                Container(
+                                  width: double.infinity,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        spreadRadius: 0,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  child: Text('Login'),
+                                  child: ElevatedButton(
+                                    onPressed: _login,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 20.0),
                                 // Divider with Text

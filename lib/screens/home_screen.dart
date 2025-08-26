@@ -11,29 +11,68 @@ import 'dart:io';
 import 'dart:async';
 import 'package:virtualfundi/services/access_token.dart';
 
-
 import 'feedback_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final int? userId;
 
-  const HomeScreen({required this.userId});
+
+  const HomeScreen({super.key, required this.userId});
+
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> scienceTopics = [];
   List<Map<String, dynamic>> filteredTopics = [];
   final TextEditingController _searchController = TextEditingController();
+  
+  late AnimationController _animationController;
+  late AnimationController _staggerController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  bool _isLoading = true;
+  bool _isSearching = false;
+
 
   @override
   void initState() {
     super.initState();
+
     fetchData();
     fetchLocalData();
 
+
+    
+    // Initialize animation controllers
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _staggerController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+    
 
     // Add a listener to the search controller
     _searchController.addListener(_filterTopics);
@@ -42,6 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _animationController.dispose();
+    _staggerController.dispose();
+
     super.dispose();
   }
 
@@ -187,9 +229,15 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       scienceTopics = topics.map((topic) => topic.toMap()).toList();
       filteredTopics = List.from(scienceTopics);
-    });
-    // loop through topics and get sessions under each topic
 
+      _isLoading = false;
+    });
+    
+    // Start animations after data is loaded
+    _animationController.forward();
+    _staggerController.forward();
+    
+    // loop through topics and get sessions under each topic
 
   }
 
@@ -197,9 +245,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final query = _searchController.text.toLowerCase();
 
     setState(() {
+
+      _isSearching = query.isNotEmpty;
       filteredTopics = scienceTopics.where((topic) {
         final topicName = topic['topicName'].toLowerCase();
-        return topicName.contains(query);
+        final subject = topic['subject']?.toLowerCase() ?? '';
+        final classTaught = topic['classTaught']?.toLowerCase() ?? '';
+        return topicName.contains(query) || 
+               subject.contains(query) || 
+               classTaught.contains(query);
       }).toList();
     });
   }
@@ -209,215 +263,684 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: CustomScaffold(
-        title: 'Topics',
-        child: Column(
-          children: [
-            ElevatedButton(onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FeedbackScreen(),
-                ),
-              );
-            }, child: Text('Feedback', style: TextStyle(color: Colors.blue),)),
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  vertical: 16.0, horizontal: 12.0),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search topics...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                    borderSide: const BorderSide(color: Colors.grey),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
+        title: 'Learning Topics',
+        child: _isLoading
+            ? _buildLoadingState()
+            : Column(
+                children: [
+                  _buildSearchBar(),
+                  _buildTopicCounter(),
+                  _buildTopicList(),
+                ],
+              ),
+      ),
+      floatingActionButton: _buildFloatingActionButton(),
+    );
+  }
+  
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.indigo),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Loading your topics...',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildHeaderSection() {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.indigo.shade600, Colors.indigo.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.indigo.withOpacity(0.3),
+                blurRadius: 15,
+                spreadRadius: 0,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Welcome Back!',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ready to explore your learning topics?',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FeedbackScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.indigo,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.feedback_outlined, size: 18),
+                    SizedBox(width: 8),
+                    Text('Feedback'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSearchBar() {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
             ),
-            // Topic list
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 16, horizontal: 12),
-                itemCount: filteredTopics.length,
-                itemBuilder: (context, index) {
-                  final topic = filteredTopics[index];
-                  final backgroundColor = _getRowColor(index);
-                  final icon = _getIconForIndex(index);
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: backgroundColor,
-                        borderRadius: BorderRadius.circular(16),
+          ],
+        ),
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Search topics, subjects, or classes...',
+            hintStyle: TextStyle(color: Colors.grey[500]),
+            prefixIcon: const Icon(Icons.search, color: Colors.indigo),
+            suffixIcon: _isSearching
+                ? IconButton(
+                    icon: Icon(Icons.clear, color: Colors.grey[600]),
+                    onPressed: () {
+                      _searchController.clear();
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Colors.indigo, width: 2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTopicCounter() {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.topic_outlined, color: Colors.indigo, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              '${filteredTopics.length} ${filteredTopics.length == 1 ? 'Topic' : 'Topics'} Available',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+            if (_isSearching) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Filtered',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.indigo,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTopicList() {
+    if (filteredTopics.isEmpty && !_isLoading) {
+      return _buildEmptyState();
+    }
+    
+    return Expanded(
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        itemCount: filteredTopics.length,
+        itemBuilder: (context, index) {
+          final topic = filteredTopics[index];
+          final backgroundColor = _getRowColor(index);
+          final icon = _getIconForIndex(index);
+          
+          return AnimatedBuilder(
+            animation: _staggerController,
+            builder: (context, child) {
+              final animationValue = Curves.easeOutCubic.transform(
+                (_staggerController.value - (index * 0.1)).clamp(0.0, 1.0),
+              );
+              
+              return FadeTransition(
+                opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+                  CurvedAnimation(
+                    parent: _staggerController,
+                    curve: Interval(
+                      (index * 0.1).clamp(0.0, 1.0),
+                      ((index * 0.1) + 0.5).clamp(0.0, 1.0),
+                      curve: Curves.easeOut,
+                    ),
+                  ),
+                ),
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.3),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: _staggerController,
+                      curve: Interval(
+                        (index * 0.1).clamp(0.0, 1.0),
+                        ((index * 0.1) + 0.5).clamp(0.0, 1.0),
+                        curve: Curves.easeOutCubic,
                       ),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            contentPadding: const EdgeInsets.all(16.0),
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: Icon(
-                                icon,
-                                color: backgroundColor,
-                              ),
-                            ),
-                            title: Text(
-                              topic['topicName']!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Class: ${topic['classTaught']}',
-                                    style: const TextStyle(
-                                        color: Colors.white70),
-                                  ),
-                                  Text(
-                                    'Term: ${topic['term']}',
-                                    style: const TextStyle(
-                                        color: Colors.white70),
-                                  ),
+                    ),
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16.0),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          backgroundColor,
+                          backgroundColor.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: backgroundColor.withOpacity(0.3),
+                          blurRadius: 15,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          contentPadding: const EdgeInsets.all(20.0),
+                          leading: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.3),
+                                  Colors.white.withOpacity(0.1),
                                 ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1,
                               ),
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                  Icons.backpack, color: Colors.white),
-                              onPressed: () {},
+                            child: Icon(
+                              icon,
+                              color: Colors.white,
+                              size: 26,
                             ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      SessionsPage(
-                                        topic: topic['topicName'],
-                                        topicId: topic['id'],
-                                      ),
-                                ),
-                              );
-                            },
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0, vertical: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          title: Text(
+                            topic['topicName']!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              letterSpacing: 0.5,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SessionsPage(
-                                              topic: topic['topicName'],
-                                              topicId: topic['id'],
-                                            ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: backgroundColor,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12.0,
-                                      horizontal: 24.0,
+                                      child: const Icon(Icons.school_outlined, color: Colors.white, size: 14),
                                     ),
-                                  ),
-                                  child: const Text(
-                                    'Prepare',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Class: ${topic['classTaught']}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SessionsPage(
-                                              topic: topic['topicName'],
-                                              topicId: topic['id'],
-                                            ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: backgroundColor,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12.0,
-                                      horizontal: 24.0,
+                                      child: const Icon(Icons.schedule_outlined, color: Colors.white, size: 14),
                                     ),
-                                  ),
-                                  child: const Text(
-                                    'Start Class',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Term: ${topic['term']}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Icon(Icons.subject_outlined, color: Colors.white, size: 14),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Subject: ${topic['subject'] ?? 'General'}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+
+                          trailing: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.3),
+                                  Colors.white.withOpacity(0.1),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SessionsPage(
+                                  topic: topic['topicName'],
+                                  topicId: topic['id'],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withOpacity(0.25),
+                                        Colors.white.withOpacity(0.15),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => SessionsPage(
+                                            topic: topic['topicName'],
+                                            topicId: topic['id'],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.menu_book_outlined, color: Colors.white, size: 20),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          'Prepare',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.15),
+                                        blurRadius: 10,
+                                        spreadRadius: 0,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => SessionsPage(
+                                            topic: topic['topicName'],
+                                            topicId: topic['id'],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.play_circle_outline_rounded, color: backgroundColor, size: 20),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          'Start Class',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: backgroundColor,
+                                            fontSize: 15,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Add_Subject_Class(userId: widget.userId),
-            ),
+                  ),
+                ),
+              );
+            },
           );
         },
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add),
-        tooltip: 'Add Subject and Class',
       ),
+    );
+  }
+  
+  Widget _buildEmptyState() {
+    return Expanded(
+      child: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.topic_outlined,
+                  size: 64,
+                  color: Colors.indigo.withOpacity(0.6),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                _isSearching ? 'No topics found' : 'No topics available',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _isSearching 
+                    ? 'Try adjusting your search terms\nor clear the search to see all topics'
+                    : 'Add your first topic to get started\nwith your learning journey',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                  height: 1.5,
+                ),
+              ),
+              if (!_isSearching) ...[
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Add_Subject_Class(userId: widget.userId),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Topic'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton.extended(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Add_Subject_Class(userId: widget.userId),
+          ),
+        );
+      },
+      icon: const Icon(Icons.add_rounded),
+      label: const Text('Add Topic'),
+      backgroundColor: Colors.indigo,
+      foregroundColor: Colors.white,
+      elevation: 8,
+      tooltip: 'Add Subject and Class',
     );
   }
 
   IconData _getIconForIndex(int index) {
     final icons = [
-      Icons.design_services,
-      Icons.design_services,
-      Icons.design_services,
-      Icons.design_services,
+      Icons.science_outlined,
+      Icons.calculate_outlined,
+      Icons.language_outlined,
+      Icons.history_edu_outlined,
+      Icons.palette_outlined,
+      Icons.sports_soccer_outlined,
+      Icons.computer_outlined,
+      Icons.biotech_outlined,
     ];
     return icons[index % icons.length];
   }
 
   Color _getRowColor(int index) {
     final colors = [
-      Colors.green,
+
+      Colors.indigo,
+      Colors.teal,
+      Colors.purple,
       Colors.orange,
+      Colors.green,
       Colors.blue,
       Colors.pink,
+      Colors.cyan,
     ];
-    return colors[index % colors.length].withOpacity(0.9);
+    return colors[index % colors.length].withOpacity(0.85);
   }
 
 
@@ -442,6 +965,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         var httpClient = http.Client();
         var request = http.Request('GET', Uri.parse(
+
             'https://fbappliedscience.com/api${fileUrl}'),
 
         );
@@ -496,7 +1020,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Handle HTTP error response
           ScaffoldMessenger.of(context)
               .showSnackBar(
-              SnackBar(content: Text('Failed to download file')));
+              const SnackBar(content: Text('Failed to download file')));
+
           throw Exception(
               'Failed to download file: HTTP ${response.statusCode}');
         }
