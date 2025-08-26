@@ -3,6 +3,7 @@ import '../database/database.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:virtualfundi/services/sharedP.dart';
+import 'package:virtualfundi/services/access_token.dart';
 
 
 
@@ -43,13 +44,7 @@ Future<void> showFeedback(BuildContext context) async {
   // Map the feedbacks into a List<Map<String, dynamic>> directly
   feedbackD = feedbacks.map((feedback) => feedback.toMap()).toList();
 
-  // Show a Snackbar to indicate syncing has started
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text("Syncing data..."),
-      duration: Duration(seconds: 3),
-    ),
-  );
+
 
   // Loop through the feedback and print each one
   for (var f in feedbackD) {
@@ -58,28 +53,23 @@ Future<void> showFeedback(BuildContext context) async {
       print("data has been sync already");
     }else{
       print(f);
-      sendData(f);
+      sendData(context, f);
     }
     print("+++++++++++++++++++++++++++++++++++++++");
   }
-  // Show a final message when sync is complete
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text("Sync complete!"),
-      duration: Duration(seconds: 3),
-    ),
-  );
 }
 
 
 // Send POST request to Django server
-Future<void> sendData(data) async {
+Future<void> sendData(BuildContext context, data) async {
   final url = Uri.parse('https://fbappliedscience.com/api/addFeedback'); // Replace with your Django API URL
+  String? token = await getToken(); // Retrieve stored token
 
   try {
     final response = await http.post(
       url,
       headers: {
+        'Authorization': 'Token $token', // Add token to request
         'Content-Type': 'application/json', // Ensure you're sending JSON
       },
       body: json.encode(data), // Convert the data to JSON format
@@ -89,6 +79,12 @@ Future<void> sendData(data) async {
       //ids.add(data['teacherId']);
       await SharedPrefsHelper.saveId(data['teacherId']);
       print('Data sent successfully: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Done..."),
+          duration: Duration(seconds: 3),
+        ),
+      );
     } else {
       // Handle failure
       print('Failed to send data: ${response.statusCode}');
@@ -98,3 +94,8 @@ Future<void> sendData(data) async {
     print('Error occurred: $e');
   }
 }
+
+
+// auto download videos here
+
+

@@ -44,7 +44,8 @@ class _AdminPageState extends State<AdminPage> {
       var httpClient = http.Client();
 
       var activity_response = await http.get(
-        Uri.parse('https://fbappliedscience.com/api/getActivity/${activity.id}'),
+        Uri.parse(
+            'https://fbappliedscience.com/api/getActivity/${activity.id}'),
         headers: {
           'Authorization': 'Token $token', // Add token to request
           'Content-Type': 'application/json',
@@ -58,8 +59,8 @@ class _AdminPageState extends State<AdminPage> {
 
       print(fileUrl);
 
-      var request =
-          http.Request('GET', Uri.parse('https://fbappliedscience.com/api${fileUrl}'));
+      var request = http.Request(
+          'GET', Uri.parse('https://fbappliedscience.com/api${fileUrl}'));
       var response = await httpClient.send(request);
 
       print("resquest---> $request");
@@ -121,7 +122,7 @@ class _AdminPageState extends State<AdminPage> {
                 imageTitle: activity.imageTitle ?? "",
                 video: filePath ?? "",
                 videoTitle: activity.videoTitle,
-                realVideo: activity.realVideo,
+                realVideo: data['real_video'],
                 createdAt: activity.createdAt,
               );
               // Update the activity in the database
@@ -129,8 +130,7 @@ class _AdminPageState extends State<AdminPage> {
 
               //Retrive all the activities from the database which has got mediatype == video
               videoActivities = await dbHelper.retrieveVideoActivities();
-              List<Activity> videoActivities1 =
-                  await dbHelper.retrieveVideoActivities();
+              List<Activity> videoActivities1 = await dbHelper.retrieveVideoActivities();
 
               setState(() {
                 //Retrive all the activities from the database which has got mediatype == video
@@ -159,6 +159,8 @@ class _AdminPageState extends State<AdminPage> {
     return await file.exists();
   }
 
+  // loop through and download all videos
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,10 +177,10 @@ class _AdminPageState extends State<AdminPage> {
       itemCount: activities.length,
       itemBuilder: (context, index) {
         final activity = activities[index];
+        final type = activity.realVideo;
 
         return FutureBuilder<bool>(
-          future:
-              isValidVideoPath(activity.video), // Check if video file exists
+          future: isValidVideoPath(activity.video), // Check if video file exists
           builder: (context, snapshot) {
             String videoStatus = "No"; // Default message
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -193,17 +195,20 @@ class _AdminPageState extends State<AdminPage> {
 
             return ListTile(
               title: Text(activity.videoTitle),
-              subtitle: Text('Video Exists: $videoStatus'),
+              subtitle: Text('Video Exist: $videoStatus, $type'),
               trailing:
                   snapshot.hasData && !snapshot.data! // If video does not exist
                       ? IconButton(
                           icon: Icon(Icons.download),
                           onPressed: () {
                             // Trigger the video download logic here
-                            downloadFile(activity, (progress){});
+                            downloadFile(activity, (progress) {});
                           },
                         )
-                      : null, // No download button if video exists
+                      : IconButton(
+                          icon: Icon(Icons.done),
+                          onPressed: null,
+                        ), // No download button if video exists
             );
           },
         );
