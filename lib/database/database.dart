@@ -432,12 +432,12 @@ class DatabaseHelper {
     );
   }
 
-  Future<Database> get database async {
-    if (_database == null) {
-      await initializeDatabase();
-    }
-    return _database!;
+
+  Future<void> runInTransaction(Future<void> Function(Transaction txn) action) async {
+    final db = await _database;
+    await db!.transaction(action);
   }
+
 
   // User operations
   Future<void> insertUser(User user) async {
@@ -504,13 +504,15 @@ class DatabaseHelper {
   }
 
 
-  Future<void> insertTopic(Topic topic) async {
+  Future<bool> insertTopic(Topic topic, {Transaction? txn}) async {
+    final db = txn ?? _database;
     try {
-      await _database!.insert(
+      await db!.insert(
         'topics',
         topic.toMap(),
         conflictAlgorithm: ConflictAlgorithm.abort,
       );
+      return true;
     } on DatabaseException catch (e) {
       if (e.isDuplicateColumnError()) {
         // Handle unique constraint violation
@@ -519,19 +521,34 @@ class DatabaseHelper {
         // Handle other database errors
         print('Database error: $e');
       }
+      return false;
     }
   }
 
 /*
   Future<List<Topic>> retrieveAllTopics() async {
     final db = await _database;
-    final List<Map<String, dynamic>> maps = await db.query('topics');
+    final List<Map<String, dynamic>> maps = await db!.query('topics');
     return List.generate(maps.length, (index) {
       return Topic.fromMap(maps[index]);
     });
   }
 
  */
+
+  Future<Map<int, String>> retrieveTopicTimestamps() async {
+    final db = await _database;
+    final List<Map<String, dynamic>> localData =
+    await db!.query('topics', columns: ['id', 'dateCreated']);
+
+    return {
+      for (var row in localData)
+        row['id'] as int: row['dateCreated'].toString()
+    };
+  }
+
+
+
 
   Future<List<Topic>> getTopicsForUser(int userId) async {
     final db = await _database;
@@ -546,14 +563,20 @@ class DatabaseHelper {
     });
   }
 
-  Future<int> updateTopic(Topic topic) async {
-    final db = await _database;
-    return await db!.update(
-      'topics',
-      topic.toMap(),
-      where: 'id = ?',
-      whereArgs: [topic.id],
-    );
+  Future<bool> updateTopic(Topic topic, {Transaction? txn}) async {
+    final db = txn ?? await _database;
+    try {
+      await db!.update(
+        'topics',
+        topic.toMap(),
+        where: 'id = ?',
+        whereArgs: [topic.id],
+      );
+      return true;
+    }catch(e){
+      print('Update topic failed: $e');
+      return false;
+    }
   }
 
   Future<int> deleteTopic(int id) async {
@@ -565,13 +588,15 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> insertSession(Session session) async {
+  Future<bool> insertSession(Session session, {Transaction? txn}) async {
+    final db = txn ?? _database;
     try {
-      await _database!.insert(
+      await db!.insert(
         'sessions',
         session.toMap(),
         conflictAlgorithm: ConflictAlgorithm.abort,
       );
+      return true;
     } on DatabaseException catch (e) {
       if (e.isDuplicateColumnError()) {
         // Handle unique constraint violation
@@ -580,7 +605,19 @@ class DatabaseHelper {
         // Handle other database errors
         print('Database error: $e');
       }
+      return false;
     }
+  }
+
+  Future<Map<int, String>> retrieveSessionTimestamps() async {
+    final db = await _database;
+    final List<Map<String, dynamic>> localData =
+    await db!.query('sessions', columns: ['id', 'dateCreated']);
+
+    return {
+      for (var row in localData)
+        row['id'] as int: row['dateCreated'].toString()
+    };
   }
 
   Future<List<Session>> retrieveAllSession(int topicId) async {
@@ -610,14 +647,20 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> updateSession(Session session) async {
-    final db = await _database;
-    return await db!.update(
-      'Sessions',
-      session.toMap(),
-      where: 'id = ?',
-      whereArgs: [session.id],
-    );
+  Future<bool> updateSession(Session session, {Transaction? txn}) async {
+    final db = txn ?? await _database;
+    try {
+      await db!.update(
+        'Sessions',
+        session.toMap(),
+        where: 'id = ?',
+        whereArgs: [session.id],
+      );
+      return true;
+    }catch(e){
+      print('Update session failed: $e');
+      return false;
+    }
   }
 
   Future<int> deleteSession(int id) async {
@@ -630,13 +673,15 @@ class DatabaseHelper {
   }
 
 
-  Future<void> insertActivity(Activity activity) async {
+  Future<bool> insertActivity(Activity activity, {Transaction? txn}) async {
+    final db = txn ?? await _database;
     try {
-      await _database!.insert(
+      await db!.insert(
         'activities',
         activity.toMap(),
         conflictAlgorithm: ConflictAlgorithm.abort,
       );
+      return true;
     } on DatabaseException catch (e) {
       if (e.isDuplicateColumnError()) {
         // Handle unique constraint violation
@@ -645,7 +690,19 @@ class DatabaseHelper {
         // Handle other database errors
         print('Database error: $e');
       }
+      return false;
     }
+  }
+
+  Future<Map<int, String>> retrieveActivitiesTimestamps() async {
+    final db = await _database;
+    final List<Map<String, dynamic>> localData =
+    await db!.query('activities', columns: ['id', 'createdAt']);
+
+    return {
+      for (var row in localData)
+        row['id'] as int: row['createdAt'].toString()
+    };
   }
 
   // Retrieve all activities under a session from the database
@@ -682,8 +739,8 @@ class DatabaseHelper {
     final db = await _database;
     final List<Map<String, dynamic>> maps = await db!.query(
       'activities',
-      where: 'mediaType = ? AND realVideo == ?',
-      whereArgs: ['video', 'realvideo'],
+      where: 'mediaType = ?',
+      whereArgs: ['video'],
     );
 
     return List.generate(maps.length, (index) {
@@ -707,14 +764,21 @@ class DatabaseHelper {
   }
 
 
-  Future<void> updateActivity(Activity activity) async {
-    final db = await _database;
-    await db!.update(
-      'activities',
-      activity.toMap(),
-      where: 'id = ?',
-      whereArgs: [activity.id],
-    );
+  Future<bool> updateActivity(Activity activity, {Transaction? txn}) async {
+    final db = txn ?? await _database;
+
+    try {
+      await db!.update(
+        'activities',
+        activity.toMap(),
+        where: 'id = ?',
+        whereArgs: [activity.id],
+      );
+      return true;
+    }catch (e){
+      print('Update topic failed: $e');
+      return false;
+    }
   }
 
   // Feedback
@@ -732,7 +796,7 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> maps = await db!.query('teacherData');
 
     // Convert each map to a Session object
-     return maps.map((map) => TeacherData.fromMap(map)).toList();
+    return maps.map((map) => TeacherData.fromMap(map)).toList();
   }
 
 }
