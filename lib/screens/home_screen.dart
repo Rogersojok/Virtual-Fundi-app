@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> scienceTopics = [];
   List<Map<String, dynamic>> filteredTopics = [];
   final TextEditingController _searchController = TextEditingController();
-  
+
   late AnimationController _animationController;
   late AnimationController _staggerController;
   late Animation<double> _fadeAnimation;
@@ -48,18 +48,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     fetchLocalData();
 
 
-    
     // Initialize animation controllers
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _staggerController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -67,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -75,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       parent: _animationController,
       curve: Curves.easeOutCubic,
     ));
-    
+
 
     // Add a listener to the search controller
     _searchController.addListener(_filterTopics);
@@ -225,8 +224,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
  */
 
 
-
-
   Future<void> fetchLocalData() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
@@ -239,17 +236,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       _isLoading = false;
     });
-    
+
     // Start animations after data is loaded
     _animationController.forward();
     _staggerController.forward();
-    
+
     // loop through topics and get sessions under each topic
 
   }
 
 
-  Future<void> fetchData() async{
+  Future<void> fetchData() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
@@ -264,13 +261,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       },
     );
 
-    if(response.statusCode != 200) throw Exception('Failed to load topics');
+    if (response.statusCode != 200) throw Exception('Failed to load topics');
     List<dynamic> topicsData = json.decode(response.body);
 
     // Retreive local timestamps
     final localTopicTimestamps = await dbHelper.retrieveTopicTimestamps();
     final localSessionTimestamps = await dbHelper.retrieveSessionTimestamps();
-    final localActivityTimestamps = await dbHelper.retrieveActivitiesTimestamps();
+    final localActivityTimestamps = await dbHelper
+        .retrieveActivitiesTimestamps();
 
     //prepare bulk list
     List<Map<String, dynamic>> topicsToInsert = [];
@@ -284,14 +282,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     Queue<Activity> videoQueue = Queue<Activity>();
 
-    for (var topicJson in topicsData){
+    for (var topicJson in topicsData) {
       final topic = Topic.fromMap(topicJson);
       final onlineTime = DateTime.parse(topicJson['dateCreated']);
       final localTime = localTopicTimestamps[topic.id];
 
-      if(localTime == null){
+      if (localTime == null) {
         topicsToInsert.add(topic.toMap());
-      }else if(onlineTime.isAfter(DateTime.parse(localTime))){
+      } else if (onlineTime.isAfter(DateTime.parse(localTime))) {
         topicsToUpdate.add(topic.toMap());
       }
 
@@ -304,39 +302,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         },
       );
 
-      if(sessionResp.statusCode != 200) continue;
+      if (sessionResp.statusCode != 200) continue;
 
       final sessionData = json.decode(sessionResp.body);
-      for(var sessionJson in sessionData){
+      for (var sessionJson in sessionData) {
         final session = Session.fromMap(sessionJson);
         final onlineSessionTime = DateTime.parse(sessionJson['dateCreated']);
         final localSessionTime = localSessionTimestamps[session.id];
 
-        if(localSessionTime == null){
+        if (localSessionTime == null) {
           sessionsToInsert.add(session.toMap());
-        }else if(onlineSessionTime.isAfter(DateTime.parse(localSessionTime))){
+        } else
+        if (onlineSessionTime.isAfter(DateTime.parse(localSessionTime))) {
           sessionsToUpdate.add(session.toMap());
         }
 
         // fetch activities for this sessions
         final activityResp = await http.get(
-            Uri.parse('https://fbappliedscience.com/api/viewActivities/${session.id}'),
+            Uri.parse('https://fbappliedscience.com/api/viewActivities/${session
+                .id}'),
             headers: {
               'Authorization': 'Token $token',
               'Content-Type': 'application/json',
             }
         );
 
-        if(activityResp.statusCode != 200) throw Exception('Failed to load activities');
+        if (activityResp.statusCode != 200) throw Exception(
+            'Failed to load activities');
 
 
         final activitiesData = json.decode(activityResp.body);
-        final localVideoActivities = await dbHelper.retrieveActivitiesBySession(session.id);
+        final localVideoActivities = await dbHelper.retrieveActivitiesBySession(
+            session.id);
         final localVideoMap = {
           for (var a in localVideoActivities) a.id: a
         };
 
-        for(var activityJson in activitiesData){
+        for (var activityJson in activitiesData) {
           //print(activityJson);
           final activity = Activity.fromMap(activityJson);
           final onlineActivityTime = DateTime.parse(activityJson['created_at']);
@@ -344,54 +346,61 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           // check if video path is missing.
           var videosActivityExist = localVideoMap[activity.id];
-          if (videosActivityExist != null && videosActivityExist.mediaType == "video" && videosActivityExist.realVideo != 'placeholder' && videosActivityExist.video.startsWith('/media')) {
+          if (videosActivityExist != null &&
+              videosActivityExist.mediaType == "video" &&
+              videosActivityExist.realVideo != 'placeholder' &&
+              videosActivityExist.video.startsWith('/media')) {
             videoQueue.add(activity);
           }
 
-          if(localActivityTime == null){
+          if (localActivityTime == null) {
             activitiesToInsert.add(activity.toMap());
             // Queue videos for download/
-            if(activity.mediaType == 'video' && activity.realVideo != 'placeholder'){
+            if (activity.mediaType == 'video' &&
+                activity.realVideo != 'placeholder') {
               videoQueue.add(activity);
             }
-          }else if(onlineActivityTime.isAfter(DateTime.parse(localActivityTime))){
+          } else
+          if (onlineActivityTime.isAfter(DateTime.parse(localActivityTime))) {
             activitiesToUpdate.add(activity.toMap());
             // Queue videos for download/
-            if(activity.mediaType == 'video' && activity.realVideo != 'placeholder'){
+            if (activity.mediaType == 'video' &&
+                activity.realVideo != 'placeholder') {
               videoQueue.add(activity);
             }
           }
-
         }
-
       }
     }
 
     // bulk insert/update
-    await dbHelper.runInTransaction((txn) async{
-      for(var t in topicsToInsert){
-        await txn.insert('topics', t, conflictAlgorithm: ConflictAlgorithm.abort);
+    await dbHelper.runInTransaction((txn) async {
+      for (var t in topicsToInsert) {
+        await txn.insert(
+            'topics', t, conflictAlgorithm: ConflictAlgorithm.abort);
       }
-      for(var t in topicsToUpdate){
+      for (var t in topicsToUpdate) {
         await txn.update('topics', t, where: 'id= ?', whereArgs: [t['id']]);
       }
 
       // sessions
-      for(var s in sessionsToInsert){
-        await txn.insert('sessions', s, conflictAlgorithm: ConflictAlgorithm.abort);
+      for (var s in sessionsToInsert) {
+        await txn.insert(
+            'sessions', s, conflictAlgorithm: ConflictAlgorithm.abort);
       }
-      for(var s in sessionsToUpdate){
+      for (var s in sessionsToUpdate) {
         await txn.update('sessions', s, where: 'id = ?', whereArgs: [s['id']]);
       }
 
       // activities
-      for(var a in activitiesToInsert){
-        await txn.insert('activities', a, conflictAlgorithm: ConflictAlgorithm.abort);
+      for (var a in activitiesToInsert) {
+        await txn.insert(
+            'activities', a, conflictAlgorithm: ConflictAlgorithm.abort);
       }
-      for(var a in activitiesToUpdate){
-        await txn.update('activities', a, where: 'id = ?', whereArgs: [a['id']]);
+      for (var a in activitiesToUpdate) {
+        await txn.update(
+            'activities', a, where: 'id = ?', whereArgs: [a['id']]);
       }
-
     });
 
     // download videos sequentially
@@ -428,24 +437,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
       }
     }
-
   }
-
 
 
   void _filterTopics() {
     final query = _searchController.text.toLowerCase();
 
     setState(() {
-
       _isSearching = query.isNotEmpty;
       filteredTopics = scienceTopics.where((topic) {
         final topicName = topic['topicName'].toLowerCase();
         final subject = topic['subject']?.toLowerCase() ?? '';
         final classTaught = topic['classTaught']?.toLowerCase() ?? '';
-        return topicName.contains(query) || 
-               subject.contains(query) || 
-               classTaught.contains(query);
+        return topicName.contains(query) ||
+            subject.contains(query) ||
+            classTaught.contains(query);
       }).toList();
     });
   }
@@ -459,17 +465,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: _isLoading
             ? _buildLoadingState()
             : Column(
-                children: [
-                  _buildSearchBar(),
-                  _buildTopicCounter(),
-                  _buildTopicList(),
-                ],
-              ),
+          children: [
+            _buildSearchBar(),
+            _buildTopicCounter(),
+            _buildTopicList(),
+          ],
+        ),
       ),
       floatingActionButton: _buildFloatingActionButton(),
     );
   }
-  
+
   Widget _buildLoadingState() {
     return Center(
       child: Column(
@@ -491,7 +497,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildHeaderSection() {
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -556,7 +562,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -573,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildSearchBar() {
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -599,14 +606,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             prefixIcon: const Icon(Icons.search, color: Colors.indigo),
             suffixIcon: _isSearching
                 ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.grey[600]),
-                    onPressed: () {
-                      _searchController.clear();
-                    },
-                  )
+              icon: Icon(Icons.clear, color: Colors.grey[600]),
+              onPressed: () {
+                _searchController.clear();
+              },
+            )
                 : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20, vertical: 16),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: Colors.indigo, width: 2),
@@ -620,7 +628,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildTopicCounter() {
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -631,7 +639,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const Icon(Icons.topic_outlined, color: Colors.indigo, size: 20),
             const SizedBox(width: 8),
             Text(
-              '${filteredTopics.length} ${filteredTopics.length == 1 ? 'Topic' : 'Topics'} Available',
+              '${filteredTopics.length} ${filteredTopics.length == 1
+                  ? 'Topic'
+                  : 'Topics'} Available',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -661,12 +671,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildTopicList() {
     if (filteredTopics.isEmpty && !_isLoading) {
       return _buildEmptyState();
     }
-    
+
     return Expanded(
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -675,14 +685,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           final topic = filteredTopics[index];
           final backgroundColor = _getRowColor(index);
           final icon = _getIconForIndex(index);
-          
+
           return AnimatedBuilder(
             animation: _staggerController,
             builder: (context, child) {
               final animationValue = Curves.easeOutCubic.transform(
                 (_staggerController.value - (index * 0.1)).clamp(0.0, 1.0),
               );
-              
+
               return FadeTransition(
                 opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
                   CurvedAnimation(
@@ -780,7 +790,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Icon(Icons.school_outlined, color: Colors.white, size: 14),
+                                      child: const Icon(Icons.school_outlined,
+                                          color: Colors.white, size: 14),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
@@ -805,7 +816,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Icon(Icons.schedule_outlined, color: Colors.white, size: 14),
+                                      child: const Icon(Icons.schedule_outlined,
+                                          color: Colors.white, size: 14),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
@@ -830,12 +842,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Icon(Icons.subject_outlined, color: Colors.white, size: 14),
+                                      child: const Icon(Icons.subject_outlined,
+                                          color: Colors.white, size: 14),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Subject: ${topic['subject'] ?? 'General'}',
+                                        'Subject: ${topic['subject'] ??
+                                            'General'}',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 15,
@@ -877,10 +891,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SessionsPage(
-                                  topic: topic['topicName'],
-                                  topicId: topic['id'],
-                                ),
+                                builder: (context) =>
+                                    SessionsPage(
+                                      topic: topic['topicName'],
+                                      topicId: topic['id'],
+                                    ),
                               ),
                             );
                           },
@@ -912,10 +927,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => SessionsPage(
-                                            topic: topic['topicName'],
-                                            topicId: topic['id'],
-                                          ),
+                                          builder: (context) =>
+                                              SessionsPage(
+                                                topic: topic['topicName'],
+                                                topicId: topic['id'],
+                                              ),
                                         ),
                                       );
                                     },
@@ -925,12 +941,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(14),
                                       ),
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
                                     ),
                                     child: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .center,
                                       children: [
-                                        Icon(Icons.menu_book_outlined, color: Colors.white, size: 20),
+                                        Icon(Icons.menu_book_outlined,
+                                            color: Colors.white, size: 20),
                                         SizedBox(width: 10),
                                         Text(
                                           'Prepare',
@@ -967,10 +986,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => SessionsPage(
-                                            topic: topic['topicName'],
-                                            topicId: topic['id'],
-                                          ),
+                                          builder: (context) =>
+                                              SessionsPage(
+                                                topic: topic['topicName'],
+                                                topicId: topic['id'],
+                                              ),
                                         ),
                                       );
                                     },
@@ -980,12 +1000,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(14),
                                       ),
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .center,
                                       children: [
-                                        Icon(Icons.play_circle_outline_rounded, color: backgroundColor, size: 20),
+                                        Icon(Icons.play_circle_outline_rounded,
+                                            color: backgroundColor, size: 20),
                                         const SizedBox(width: 10),
                                         Text(
                                           'Start Class',
@@ -1015,7 +1038,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildEmptyState() {
     return Expanded(
       child: Center(
@@ -1047,7 +1070,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 12),
               Text(
-                _isSearching 
+                _isSearching
                     ? 'Try adjusting your search terms\nor clear the search to see all topics'
                     : 'Add your first topic to get started\nwith your learning journey',
                 textAlign: TextAlign.center,
@@ -1064,7 +1087,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Add_Subject_Class(userId: widget.userId),
+                        builder: (context) =>
+                            Add_Subject_Class(userId: widget.userId),
                       ),
                     );
                   },
@@ -1073,7 +1097,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -1086,7 +1111,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildFloatingActionButton() {
     return FloatingActionButton.extended(
       onPressed: () {
@@ -1136,90 +1161,91 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
 
-
   // download video
-  Future<String> downloadFile(String fileUrl, Function(int) onProgress, String isVideo) async {
-    // Check if fileUrl is empty before proceeding
-    if (fileUrl
-        .trim()
-        .isEmpty) {
-      print("File URL is empty. Skipping download.");
-      return "File URL is empty";
-    }
-
+  Future<String> downloadFile(Activity activity,
+      Function(int) onProgress) async {
+    String? token = await getToken();
     try {
-      // check if video is not a placeholder
-      if (isVideo == "placeholder" && fileUrl
-          .trim()
-          .isEmpty) {
+      var httpClient = http.Client();
+
+      // Get activity data
+      var activityResponse = await http.get(
+        Uri.parse(
+            'https://fbappliedscience.com/api/getActivity/${activity.id}'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final Map<String, dynamic> data = json.decode(activityResponse.body);
+      String fileUrl = data['video'];
+      if (data['real_video'] == "placeholder") {
         return "placeholder video";
-      } else {
-        var httpClient = http.Client();
-        var request = http.Request('GET', Uri.parse(
+      }
 
-            'https://fbappliedscience.com/api${fileUrl}'),
+      // Extract filename
+      Uri uri = Uri.parse(fileUrl);
+      String fileName = uri.pathSegments.last;
 
-        );
+      // Prepare file path
+      final appDir = await getApplicationDocumentsDirectory();
+      final filePath = '${appDir.path}/$fileName';
+      final file = File(filePath);
 
-        var response = await httpClient.send(request);
+      // Stream download directly to file
+      var request = http.Request(
+          'GET', Uri.parse('https://fbappliedscience.com/api$fileUrl'));
+      var response = await httpClient.send(request);
 
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download file: HTTP ${response.statusCode}');
+      }
 
-        // Extract filename from the URL
-        Uri uri = Uri.parse(fileUrl);
-        String fileName = uri.pathSegments.last;
+      int totalBytes = response.contentLength ?? -1;
+      int receivedBytes = 0;
 
-        late String filePath = '';
+      final sink = file.openWrite();
 
-        int totalBytes = response.contentLength ?? -1;
-        int receivedBytes = 0;
-
-        if (response.statusCode == 200) {
-          //var bytes = await response.stream.toBytes();
-          var bytes = <int>[];
-          print(response.headers);
-
-          response.stream.listen(
-                (List<int> chunk) {
-              bytes.addAll(chunk);
-              receivedBytes += chunk.length;
-
-              // Calculate progress and call the onProgress function
-              double progress = (receivedBytes / totalBytes) * 100;
-              onProgress(progress.toInt()); // Pass the progress value
-              // Show progress in a ScaffoldMessenger
-              setState(() {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                    SnackBar(
-                        content: Text('downloading.. $fileName -- $progress')));
-              });
-            },
-            onDone: () async {
-              // When download completes, write the file to local storage
-              var appDir = await getApplicationDocumentsDirectory();
-              filePath = '${appDir.path}/$fileName';
-              File file = File(filePath);
-              await file.writeAsBytes(bytes);
-              //print('filePath in download function: $filePath');
-            },
-            onError: (e) async {
-              throw Exception('Failed to download file: $e');
-            },
-          );
-          return filePath;
-        } else {
-          // Handle HTTP error response
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-              const SnackBar(content: Text('Failed to download file')));
-
-          throw Exception(
-              'Failed to download file: HTTP ${response.statusCode}');
+      // Stream chunks directly to disk
+      await for (var chunk in response.stream) {
+        sink.add(chunk);
+        receivedBytes += chunk.length;
+        if (totalBytes > 0) {
+          double progress = (receivedBytes / totalBytes) * 100;
+          onProgress(progress.toInt());
+          setState(() {}); // optional: update UI
         }
       }
-    } catch (e) {
-        print("try error $e");
-        return "try cach part";
+
+      await sink.close();
+
+      // Update activity in database
+      final dbHelper = DatabaseHelper();
+      await dbHelper.initializeDatabase();
+
+      final updatedActivity = Activity(
+        id: activity.id,
+        title: activity.title,
+        session: activity.session,
+        teacherActivity: activity.teacherActivity,
+        studentActivity: activity.studentActivity,
+        mediaType: activity.mediaType,
+        time: activity.time ?? 5,
+        notes: activity.notes,
+        image: activity.image ?? "",
+        imageTitle: activity.imageTitle ?? "",
+        video: filePath,
+        videoTitle: activity.videoTitle,
+        realVideo: data['real_video'],
+        createdAt: activity.createdAt,
+      );
+
+      await dbHelper.updateActivity(updatedActivity);
+
+      return filePath;
+    } catch (error) {
+      throw Exception('Failed to download file: $error');
     }
   }
 }
