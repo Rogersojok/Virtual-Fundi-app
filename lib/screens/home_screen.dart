@@ -243,6 +243,191 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   }
 
+
+  Future<void> fetchData() async{
+    final dbHelper = DatabaseHelper();
+    await dbHelper.initializeDatabase();
+
+    String? token = await getToken();
+
+    // fetch all topics
+    final response = await http.get(
+      Uri.parse('https://fbappliedscience.com/api/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-type': 'application/json',
+      },
+    );
+
+    if(response.statusCode != 200) throw Exception('Failed to load topics');
+    List<dynamic> topicsData = json.decode(response.body);
+
+    // Retreive local timestamps
+    final localTopicTimestamps = await dbHelper.retrieveTopicTimestamps();
+    final localSessionTimestamps = await dbHelper.retrieveSessionTimestamps();
+    final localActivityTimestamps = await dbHelper.retrieveActivitiesTimestamps();
+
+    //prepare bulk list
+    List<Map<String, dynamic>> topicsToInsert = [];
+    List<Map<String, dynamic>> topicsToUpdate = [];
+
+    List<Map<String, dynamic>> sessionsToInsert = [];
+    List<Map<String, dynamic>> sessionsToUpdate = [];
+
+    List<Map<String, dynamic>> activitiesToInsert = [];
+    List<Map<String, dynamic>> activitiesToUpdate = [];
+
+    Queue<Activity> videoQueue = Queue<Activity>();
+
+    for (var topicJson in topicsData){
+      final topic = Topic.fromMap(topicJson);
+      final onlineTime = DateTime.parse(topicJson['dateCreated']);
+      final localTime = localTopicTimestamps[topic.id];
+
+      if(localTime == null){
+        topicsToInsert.add(topic.toMap());
+      }else if(onlineTime.isAfter(DateTime.parse(localTime))){
+        topicsToUpdate.add(topic.toMap());
+      }
+
+      //fetch sessions for this topic
+      final sessionResp = await http.get(
+        Uri.parse('https://fbappliedscience.com/api/viewSessions/${topic.id}'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if(sessionResp.statusCode != 200) continue;
+
+      final sessionData = json.decode(sessionResp.body);
+      for(var sessionJson in sessionData){
+        final session = Session.fromMap(sessionJson);
+        final onlineSessionTime = DateTime.parse(sessionJson['dateCreated']);
+        final localSessionTime = localSessionTimestamps[session.id];
+
+        if(localSessionTime == null){
+          sessionsToInsert.add(session.toMap());
+        }else if(onlineSessionTime.isAfter(DateTime.parse(localSessionTime))){
+          sessionsToUpdate.add(session.toMap());
+        }
+
+        // fetch activities for this sessions
+        final activityResp = await http.get(
+            Uri.parse('https://fbappliedscience.com/api/viewActivities/${session.id}'),
+            headers: {
+              'Authorization': 'Token $token',
+              'Content-Type': 'application/json',
+            }
+        );
+
+        if(activityResp.statusCode != 200) throw Exception('Failed to load activities');
+
+
+        final activitiesData = json.decode(activityResp.body);
+        final localVideoActivities = await dbHelper.retrieveActivitiesBySession(session.id);
+        final localVideoMap = {
+          for (var a in localVideoActivities) a.id: a
+        };
+
+        for(var activityJson in activitiesData){
+          //print(activityJson);
+          final activity = Activity.fromMap(activityJson);
+          final onlineActivityTime = DateTime.parse(activityJson['created_at']);
+          final localActivityTime = localActivityTimestamps[activity.id];
+
+          // check if video path is missing.
+          var videosActivityExist = localVideoMap[activity.id];
+          if (videosActivityExist != null && videosActivityExist.mediaType == "video" && videosActivityExist.realVideo != 'placeholder' && videosActivityExist.video.startsWith('/media')) {
+            videoQueue.add(activity);
+          }
+
+          if(localActivityTime == null){
+            activitiesToInsert.add(activity.toMap());
+            // Queue videos for download/
+            if(activity.mediaType == 'video' && activity.realVideo != 'placeholder'){
+              videoQueue.add(activity);
+            }
+          }else if(onlineActivityTime.isAfter(DateTime.parse(localActivityTime))){
+            activitiesToUpdate.add(activity.toMap());
+            // Queue videos for download/
+            if(activity.mediaType == 'video' && activity.realVideo != 'placeholder'){
+              videoQueue.add(activity);
+            }
+          }
+
+        }
+
+      }
+    }
+
+    // bulk insert/update
+    await dbHelper.runInTransaction((txn) async{
+      for(var t in topicsToInsert){
+        await txn.insert('topics', t, conflictAlgorithm: ConflictAlgorithm.abort);
+      }
+      for(var t in topicsToUpdate){
+        await txn.update('topics', t, where: 'id= ?', whereArgs: [t['id']]);
+      }
+
+      // sessions
+      for(var s in sessionsToInsert){
+        await txn.insert('sessions', s, conflictAlgorithm: ConflictAlgorithm.abort);
+      }
+      for(var s in sessionsToUpdate){
+        await txn.update('sessions', s, where: 'id = ?', whereArgs: [s['id']]);
+      }
+
+      // activities
+      for(var a in activitiesToInsert){
+        await txn.insert('activities', a, conflictAlgorithm: ConflictAlgorithm.abort);
+      }
+      for(var a in activitiesToUpdate){
+        await txn.update('activities', a, where: 'id = ?', whereArgs: [a['id']]);
+      }
+
+    });
+
+    // download videos sequentially
+    const int maxRetries = 3;
+
+    while (videoQueue.isNotEmpty) {
+      final activity = videoQueue.removeFirst();
+
+      if (activity.realVideo != 'placeholder') {
+        int attempt = 0;
+        bool success = false;
+
+        while (!success && attempt < maxRetries) {
+          attempt++;
+          try {
+            final localPath = await downloadFile(activity, (p0) => null);
+            print("Downloaded, local path: $localPath");
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('Downloaded video: ${activity.videoTitle}')),
+            );
+
+            success = true; // exit retry loop
+          } catch (e) {
+            print("Video download failed on attempt $attempt: $e");
+            if (attempt >= maxRetries) {
+              print("Giving up on this video after $maxRetries attempts");
+            } else {
+              await Future.delayed(
+                  Duration(seconds: 2)); // optional wait before retry
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+
+
   void _filterTopics() {
     final query = _searchController.text.toLowerCase();
 
