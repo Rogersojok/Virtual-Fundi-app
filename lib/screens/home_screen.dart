@@ -220,6 +220,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
 
+
+
   Future<void> fetchLocalData() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
