@@ -120,7 +120,7 @@ class Activity {
   final String notes;
   final String image;
   final String imageTitle;
-  final String video;
+  late final String video;
   final String videoTitle;
   final String realVideo;
   final DateTime createdAt;
@@ -394,6 +394,12 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   Database? _database;
+
+  Future<Database> get mDatabase async {
+    if (_database != null) return _database!;
+    await initializeDatabase();
+    return _database!;
+  }
 
   Future<void> initializeDatabase() async {
     // Initialize the database

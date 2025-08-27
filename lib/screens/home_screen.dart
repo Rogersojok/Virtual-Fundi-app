@@ -89,6 +89,95 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+
+  Future<String> downloadFile(Activity activity,
+      Function(int) onProgress) async {
+    String? token = await getToken();
+    try {
+      var httpClient = http.Client();
+
+      // Get activity data
+      var activityResponse = await http.get(
+        Uri.parse(
+            'https://fbappliedscience.com/api/getActivity/${activity.id}'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final Map<String, dynamic> data = json.decode(activityResponse.body);
+      String fileUrl = data['video'];
+      if (data['real_video'] == "placeholder") {
+        return "placeholder video";
+      }
+
+      // Extract filename
+      Uri uri = Uri.parse(fileUrl);
+      String fileName = uri.pathSegments.last;
+
+      // Prepare file path
+      final appDir = await getApplicationDocumentsDirectory();
+      final filePath = '${appDir.path}/$fileName';
+      final file = File(filePath);
+
+      // Stream download directly to file
+      var request = http.Request(
+          'GET', Uri.parse('https://fbappliedscience.com/api$fileUrl'));
+      var response = await httpClient.send(request);
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download file: HTTP ${response.statusCode}');
+      }
+
+      int totalBytes = response.contentLength ?? -1;
+      int receivedBytes = 0;
+
+      final sink = file.openWrite();
+
+      // Stream chunks directly to disk
+      await for (var chunk in response.stream) {
+        sink.add(chunk);
+        receivedBytes += chunk.length;
+        if (totalBytes > 0) {
+          double progress = (receivedBytes / totalBytes) * 100;
+          onProgress(progress.toInt());
+          setState(() {}); // optional: update UI
+        }
+      }
+
+      await sink.close();
+
+      // Update activity in database
+      final dbHelper = DatabaseHelper();
+      await dbHelper.initializeDatabase();
+
+      final updatedActivity = Activity(
+        id: activity.id,
+        title: activity.title,
+        session: activity.session,
+        teacherActivity: activity.teacherActivity,
+        studentActivity: activity.studentActivity,
+        mediaType: activity.mediaType,
+        time: activity.time ?? 5,
+        notes: activity.notes,
+        image: activity.image ?? "",
+        imageTitle: activity.imageTitle ?? "",
+        video: filePath,
+        videoTitle: activity.videoTitle,
+        realVideo: data['real_video'],
+        createdAt: activity.createdAt,
+      );
+
+      await dbHelper.updateActivity(updatedActivity);
+
+      return filePath;
+    } catch (error) {
+      throw Exception('Failed to download file: $error');
+    }
+  }
+
+
 /*
   Future<void> fetchData() async {
     // retrive access token
@@ -98,7 +187,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     await dbHelper.initializeDatabase();
     //checkInternet3();
 
-    final response = await http.get(Uri.parse('https://fbappliedscience.com/api/'),
+    final response = await http.get(
+      Uri.parse('https://fbappliedscience.com/api/'),
       headers: {
         'Authorization': 'Token $token', // Add token to request
         'Content-Type': 'application/json',
@@ -107,6 +197,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
+
+      // get all topics from the database
+      final localTimestamps = await dbHelper.retrieveTopicTimestamps();
 
       for (var jsonData in data) {
         final topic = Topic(
@@ -119,20 +212,51 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           classTaught: jsonData['classTaught'],
           dateCreated: DateTime.parse(jsonData['dateCreated']),
         );
-        await dbHelper.insertTopic(topic);
 
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('topic ${jsonData['topicName']}')));
+        // get the online time
+        final onlineTime = DateTime.parse(jsonData['dateCreated']);
+        final localUpdateTime = localTimestamps[topic.id];
+
+        if (localUpdateTime == null) {
+          // topic doesnt exit, insert
+          bool success = await dbHelper.insertTopic(topic);
+
+          if (success) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(
+                content: Text('inserted topic ${jsonData['topicName']}')));
+          }
+        } else {
+          // Timestamp exists — compare and update if needed
+          final localUpdateT = DateTime.parse(localUpdateTime);
+
+          if (onlineTime.isAfter(localUpdateT)) {
+            // update the topic
+            // topic doesnt exit, insert
+            bool success = await dbHelper.updateTopic(topic);
+
+            if (success) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(
+                  content: Text('Updated topic ${jsonData['topicName']}')));
+            }
+          }
+        }
 
         // get all sessions under this topic
         final response = await http.get(
-          Uri.parse('https://fbappliedscience.com/api/viewSessions/${jsonData['id']}'),
+          Uri.parse(
+              'https://fbappliedscience.com/api/viewSessions/${jsonData['id']}'),
           headers: {
             'Authorization': 'Token $token', // Add token to request
             'Content-Type': 'application/json',
           },
         );
-        //changes
+
+        // get session list
+        final localTimestampsSession = await dbHelper
+            .retrieveSessionTimestamps();
+
 
         if (response.statusCode == 200) {
           List<dynamic> data = json.decode(response.body);
@@ -148,16 +272,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               schoolResources: jsonData['schoolResources'],
               dateCreated: DateTime.parse(jsonData['dateCreated']),
             );
-            await dbHelper.insertSession(session);
-            final topics = await dbHelper.getTopicsForUser(widget.userId!);
 
-            setState(() {
-              scienceTopics = topics.map((topic) => topic.toMap()).toList();
-              filteredTopics = List.from(scienceTopics);
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
-                  SnackBar(content: Text('session ${jsonData['sessionName']}')));
-            });
+            // get the online time
+            final onlineTimeSession = DateTime.parse(jsonData['dateCreated']);
+            final localUpdateTimeSession = localTimestampsSession[session.id];
+
+            if (localUpdateTimeSession == null) {
+              // session doesnt exist, insert
+              bool success = await dbHelper.insertSession(session);
+
+              if (success) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(
+                    SnackBar(content: Text(
+                        'inserted session ${jsonData['sessionName']}')));
+              }
+            } else {
+              // Timestamp exists — compare and update if needed
+              final localUpdateS = DateTime.parse(localUpdateTimeSession);
+
+              if (onlineTimeSession.isAfter(localUpdateS)) {
+                // update the topic
+                bool success = await dbHelper.updateSession(session);
+                if (success) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(
+                      'Updated session ${jsonData['sessionName']}')));
+                }
+              }
+            }
+
 
             //get all activities under each session here
             final response = await http.get(Uri.parse(
@@ -167,6 +311,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 'Content-Type': 'application/json',
               },
             );
+
+            // get activities timestamp
+            final activityTimeStamp = await dbHelper
+                .retrieveActivitiesTimestamps();
 
             if (response.statusCode == 200) {
               List<dynamic> data = json.decode(response.body);
@@ -192,13 +340,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   realVideo: jsonData['real_video'],
                   createdAt: DateTime.parse(jsonData['created_at']),
                 );
-                await dbHelper.insertActivity(activity);
 
-                setState(() {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                      SnackBar(content: Text('activity ${jsonData['title']}')));
-                });
+                // get online timestamp
+                final activityOnlineTimeStamp = DateTime.parse(
+                    jsonData['created_at']);
+                // get each local time stamp by id
+                final localUpdateTimeStampActivity = activityTimeStamp[activity
+                    .id];
+
+
+                if (localUpdateTimeStampActivity == null) {
+                  // activity doesnt exist, insert
+                  bool success = await dbHelper.insertActivity(activity);
+                  // check if its video activity then download the video
+                  if (activity.mediaType == "video" &&
+                      activity.realVideo != "placeholder") {
+                    downloadFile(activity, (progress) {});
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                        SnackBar(content: Text(
+                            'downlaoding.. ${jsonData['video_title']}')));
+                  }
+                  if (success) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                        SnackBar(content: Text(
+                            'inserted activity ${jsonData['title']}')));
+                  }
+                } else {
+                  // Timestamp exists — compare and update if needed
+                  final localUpdateA = DateTime.parse(
+                      localUpdateTimeStampActivity);
+
+                  if (activityOnlineTimeStamp.isAfter(localUpdateA)) {
+                    // update the activity
+                    // check if its video then download and update else just update
+
+                    if (activity.mediaType == "video" &&
+                        activity.realVideo != "placeholder") {
+                      downloadFile(activity, (progress) {});
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(
+                          SnackBar(content: Text(
+                              'downlaoding.. ${jsonData['video_title']}')));
+                    } else {
+                      bool success = await dbHelper.updateActivity(activity);
+                      if (success) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text(
+                            'Updated activity ${jsonData['title']}')));
+                      }
+                    }
+                  }
+                }
               }
             } else {
               throw Exception('Failed to load activity data');
@@ -208,14 +402,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           print('failed response ${response.body}');
           throw Exception('Failed to load session data');
         }
+
+        final topics = await dbHelper.getTopicsForUser(widget.userId!);
+
+        setState(() {
+          scienceTopics = topics.map((topic) => topic.toMap()).toList();
+          filteredTopics = List.from(scienceTopics);
+        });
       }
-
-      final topics = await dbHelper.getTopicsForUser(widget.userId!);
-
-      setState(() {
-        scienceTopics = topics.map((topic) => topic.toMap()).toList();
-        filteredTopics = List.from(scienceTopics);
-      });
     } else {
       throw Exception('Failed to load topic data');
     }
@@ -580,6 +774,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
+
 
   Widget _buildSearchBar() {
     return FadeTransition(
@@ -1158,94 +1353,5 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       Colors.cyan,
     ];
     return colors[index % colors.length].withOpacity(0.85);
-  }
-
-
-  // download video
-  Future<String> downloadFile(Activity activity,
-      Function(int) onProgress) async {
-    String? token = await getToken();
-    try {
-      var httpClient = http.Client();
-
-      // Get activity data
-      var activityResponse = await http.get(
-        Uri.parse(
-            'https://fbappliedscience.com/api/getActivity/${activity.id}'),
-        headers: {
-          'Authorization': 'Token $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      final Map<String, dynamic> data = json.decode(activityResponse.body);
-      String fileUrl = data['video'];
-      if (data['real_video'] == "placeholder") {
-        return "placeholder video";
-      }
-
-      // Extract filename
-      Uri uri = Uri.parse(fileUrl);
-      String fileName = uri.pathSegments.last;
-
-      // Prepare file path
-      final appDir = await getApplicationDocumentsDirectory();
-      final filePath = '${appDir.path}/$fileName';
-      final file = File(filePath);
-
-      // Stream download directly to file
-      var request = http.Request(
-          'GET', Uri.parse('https://fbappliedscience.com/api$fileUrl'));
-      var response = await httpClient.send(request);
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to download file: HTTP ${response.statusCode}');
-      }
-
-      int totalBytes = response.contentLength ?? -1;
-      int receivedBytes = 0;
-
-      final sink = file.openWrite();
-
-      // Stream chunks directly to disk
-      await for (var chunk in response.stream) {
-        sink.add(chunk);
-        receivedBytes += chunk.length;
-        if (totalBytes > 0) {
-          double progress = (receivedBytes / totalBytes) * 100;
-          onProgress(progress.toInt());
-          setState(() {}); // optional: update UI
-        }
-      }
-
-      await sink.close();
-
-      // Update activity in database
-      final dbHelper = DatabaseHelper();
-      await dbHelper.initializeDatabase();
-
-      final updatedActivity = Activity(
-        id: activity.id,
-        title: activity.title,
-        session: activity.session,
-        teacherActivity: activity.teacherActivity,
-        studentActivity: activity.studentActivity,
-        mediaType: activity.mediaType,
-        time: activity.time ?? 5,
-        notes: activity.notes,
-        image: activity.image ?? "",
-        imageTitle: activity.imageTitle ?? "",
-        video: filePath,
-        videoTitle: activity.videoTitle,
-        realVideo: data['real_video'],
-        createdAt: activity.createdAt,
-      );
-
-      await dbHelper.updateActivity(updatedActivity);
-
-      return filePath;
-    } catch (error) {
-      throw Exception('Failed to download file: $error');
-    }
   }
 }

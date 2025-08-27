@@ -127,7 +127,7 @@ class _FeedbackScreenState extends State<FeedbackScreen>
       _buildRadioGroup(
         ['1', '2', '3', '4', '5'],
         _digitalContentUsefulnes,
-            (value) => setState(() => _tabletEaseOfUse = value!),
+            (value) => setState(() => _digitalContentUsefulnes = value!),
         // labels: ['Not Useful', 'Very Useful'],
       ),
 
@@ -135,14 +135,14 @@ class _FeedbackScreenState extends State<FeedbackScreen>
       _buildRadioGroup(
         ['More Time Saved', 'Less Time Saved', 'About the Same Time', 'More Time Required'],
         _prepTimeSaved,
-            (value) => setState(() => _tabletEaseOfUse = value!),
+            (value) => setState(() => _prepTimeSaved = value!),
       ),
 
       _buildSectionHeader('How effective are the instructional guides in the Virtual Fundi assisting with lesson preparation?'),
       _buildRadioGroup(
         ['Very Effective', 'Effective', 'Neutral', 'Ineffective', 'Very Ineffective'],
         _effectivenessOfIntruc,
-            (value) => setState(() => _tabletEaseOfUse = value!),
+            (value) => setState(() => _effectivenessOfIntruc = value!),
       ),
 
     ]);
@@ -170,7 +170,7 @@ class _FeedbackScreenState extends State<FeedbackScreen>
       _buildRadioGroup(
         ['1', '2', '3', '4', '5'],
         _confidenceInESC,
-            (value) => setState(() => _tabletEaseOfUse = value!),
+            (value) => setState(() => _confidenceInESC = value!),
         // labels: ['Not Useful', 'Very Useful'],
       ),
 
