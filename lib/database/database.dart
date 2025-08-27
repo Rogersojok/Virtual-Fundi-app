@@ -173,14 +173,15 @@ class Activity {
       mediaType: map['mediaType'],
       time: map['time'],
       notes: map['notes'],
-      image: map['image'],
-      imageTitle: map['imageTitle'],
-      video: map['video'],
-      videoTitle: map['videoTitle'],
-      realVideo: map['realVideo'],
-      createdAt: DateTime.parse(map['createdAt']),
+      image: map['image'] ?? "",
+      imageTitle: map['imageTitle'] ?? "",
+      video: map['video'] ?? "",
+      videoTitle: map['videoTitle'] ?? "",
+      realVideo: map['realVideo'] ?? "",
+      createdAt: DateTime.parse(map['created_at']),
     );
   }
+
   @override
   String toString() {
     return 'Activity{id: $id, title: $title, session: $session, teacherActivity: $teacherActivity, studentActivity: $studentActivity, mediaType: $mediaType, time: $time, notes: $notes, image: $image, imageTitle: $imageTitle, video: $video, videoTitle: $videoTitle, realVideo: $realVideo, createdAt: $createdAt}';
