@@ -1138,8 +1138,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
 
   // download video
-  Future<String> downloadFile(String fileUrl, Function(int) onProgress,
-      String isVideo) async {
+  Future<String> downloadFile(String fileUrl, Function(int) onProgress, String isVideo) async {
     // Check if fileUrl is empty before proceeding
     if (fileUrl
         .trim()
