@@ -90,8 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
 
-  Future<String> downloadFile(Activity activity,
-      Function(int) onProgress) async {
+  Future<String> downloadFile(Activity activity, Function(int) onProgress) async {
     String? token = await getToken();
     try {
       var httpClient = http.Client();
@@ -142,7 +141,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if (totalBytes > 0) {
           double progress = (receivedBytes / totalBytes) * 100;
           onProgress(progress.toInt());
-          setState(() {}); // optional: update UI
+          setState(() {
+
+          }); // optional: update UI
         }
       }
 
@@ -171,251 +172,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       await dbHelper.updateActivity(updatedActivity);
 
+      // refetech that database
+      fetchLocalData();
+
       return filePath;
     } catch (error) {
       throw Exception('Failed to download file: $error');
     }
   }
-
-
-/*
-  Future<void> fetchData() async {
-    // retrive access token
-    String? token = await getToken(); // Retrieve stored token
-    // initialize the database
-    final dbHelper = DatabaseHelper();
-    await dbHelper.initializeDatabase();
-    //checkInternet3();
-
-    final response = await http.get(
-      Uri.parse('https://fbappliedscience.com/api/'),
-      headers: {
-        'Authorization': 'Token $token', // Add token to request
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-
-      // get all topics from the database
-      final localTimestamps = await dbHelper.retrieveTopicTimestamps();
-
-      for (var jsonData in data) {
-        final topic = Topic(
-          id: jsonData['id'],
-          topicName: jsonData['topicName'],
-          topicCode: jsonData['topicCode'],
-          term: jsonData['term'],
-          cat: jsonData['cat'],
-          subject: jsonData['subject'],
-          classTaught: jsonData['classTaught'],
-          dateCreated: DateTime.parse(jsonData['dateCreated']),
-        );
-
-        // get the online time
-        final onlineTime = DateTime.parse(jsonData['dateCreated']);
-        final localUpdateTime = localTimestamps[topic.id];
-
-        if (localUpdateTime == null) {
-          // topic doesnt exit, insert
-          bool success = await dbHelper.insertTopic(topic);
-
-          if (success) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(
-                content: Text('inserted topic ${jsonData['topicName']}')));
-          }
-        } else {
-          // Timestamp exists — compare and update if needed
-          final localUpdateT = DateTime.parse(localUpdateTime);
-
-          if (onlineTime.isAfter(localUpdateT)) {
-            // update the topic
-            // topic doesnt exit, insert
-            bool success = await dbHelper.updateTopic(topic);
-
-            if (success) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(
-                  content: Text('Updated topic ${jsonData['topicName']}')));
-            }
-          }
-        }
-
-        // get all sessions under this topic
-        final response = await http.get(
-          Uri.parse(
-              'https://fbappliedscience.com/api/viewSessions/${jsonData['id']}'),
-          headers: {
-            'Authorization': 'Token $token', // Add token to request
-            'Content-Type': 'application/json',
-          },
-        );
-
-        // get session list
-        final localTimestampsSession = await dbHelper
-            .retrieveSessionTimestamps();
-
-
-        if (response.statusCode == 200) {
-          List<dynamic> data = json.decode(response.body);
-
-          for (var jsonData in data) {
-            final session = Session(
-              id: jsonData['id'],
-              sessionName: jsonData['sessionName'],
-              topic: jsonData['topic'],
-              duration: jsonData['duration'],
-              learningObjective: jsonData['learningObjective'],
-              fundibotsResources: jsonData['fundibotsResources'],
-              schoolResources: jsonData['schoolResources'],
-              dateCreated: DateTime.parse(jsonData['dateCreated']),
-            );
-
-            // get the online time
-            final onlineTimeSession = DateTime.parse(jsonData['dateCreated']);
-            final localUpdateTimeSession = localTimestampsSession[session.id];
-
-            if (localUpdateTimeSession == null) {
-              // session doesnt exist, insert
-              bool success = await dbHelper.insertSession(session);
-
-              if (success) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                    SnackBar(content: Text(
-                        'inserted session ${jsonData['sessionName']}')));
-              }
-            } else {
-              // Timestamp exists — compare and update if needed
-              final localUpdateS = DateTime.parse(localUpdateTimeSession);
-
-              if (onlineTimeSession.isAfter(localUpdateS)) {
-                // update the topic
-                bool success = await dbHelper.updateSession(session);
-                if (success) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text(
-                      'Updated session ${jsonData['sessionName']}')));
-                }
-              }
-            }
-
-
-            //get all activities under each session here
-            final response = await http.get(Uri.parse(
-                'https://fbappliedscience.com/api/viewActivities/${jsonData['id']}'),
-              headers: {
-                'Authorization': 'Token $token', // Add token to request
-                'Content-Type': 'application/json',
-              },
-            );
-
-            // get activities timestamp
-            final activityTimeStamp = await dbHelper
-                .retrieveActivitiesTimestamps();
-
-            if (response.statusCode == 200) {
-              List<dynamic> data = json.decode(response.body);
-
-              // Convert JSON data to Session objects and insert into the database
-              for (var jsonData in data) {
-                // download video here before inserting in the database.
-
-                // insert the data including the video url.
-                final activity = Activity(
-                  id: jsonData['id'],
-                  title: jsonData['title'],
-                  session: jsonData['session'],
-                  teacherActivity: jsonData['teacherActivity'],
-                  studentActivity: jsonData['studentActivity'],
-                  mediaType: jsonData['mediaType'],
-                  time: jsonData['time'] ?? 5,
-                  notes: jsonData['notes'],
-                  image: jsonData['image'] ?? "",
-                  imageTitle: jsonData['image_title'] ?? "",
-                  video: jsonData['video'] ?? "",
-                  videoTitle: jsonData['video_title'] ?? "",
-                  realVideo: jsonData['real_video'],
-                  createdAt: DateTime.parse(jsonData['created_at']),
-                );
-
-                // get online timestamp
-                final activityOnlineTimeStamp = DateTime.parse(
-                    jsonData['created_at']);
-                // get each local time stamp by id
-                final localUpdateTimeStampActivity = activityTimeStamp[activity
-                    .id];
-
-
-                if (localUpdateTimeStampActivity == null) {
-                  // activity doesnt exist, insert
-                  bool success = await dbHelper.insertActivity(activity);
-                  // check if its video activity then download the video
-                  if (activity.mediaType == "video" &&
-                      activity.realVideo != "placeholder") {
-                    downloadFile(activity, (progress) {});
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                        SnackBar(content: Text(
-                            'downlaoding.. ${jsonData['video_title']}')));
-                  }
-                  if (success) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                        SnackBar(content: Text(
-                            'inserted activity ${jsonData['title']}')));
-                  }
-                } else {
-                  // Timestamp exists — compare and update if needed
-                  final localUpdateA = DateTime.parse(
-                      localUpdateTimeStampActivity);
-
-                  if (activityOnlineTimeStamp.isAfter(localUpdateA)) {
-                    // update the activity
-                    // check if its video then download and update else just update
-
-                    if (activity.mediaType == "video" &&
-                        activity.realVideo != "placeholder") {
-                      downloadFile(activity, (progress) {});
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                          SnackBar(content: Text(
-                              'downlaoding.. ${jsonData['video_title']}')));
-                    } else {
-                      bool success = await dbHelper.updateActivity(activity);
-                      if (success) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text(
-                            'Updated activity ${jsonData['title']}')));
-                      }
-                    }
-                  }
-                }
-              }
-            } else {
-              throw Exception('Failed to load activity data');
-            }
-          }
-        } else {
-          print('failed response ${response.body}');
-          throw Exception('Failed to load session data');
-        }
-
-        final topics = await dbHelper.getTopicsForUser(widget.userId!);
-
-        setState(() {
-          scienceTopics = topics.map((topic) => topic.toMap()).toList();
-          filteredTopics = List.from(scienceTopics);
-        });
-      }
-    } else {
-      throw Exception('Failed to load topic data');
-    }
-  }
-
- */
 
 
   Future<void> fetchLocalData() async {
@@ -615,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text('Downloaded video: ${activity.videoTitle}')),
+                  content: Text('Downloaded video: ${activity.video}')),
             );
 
             success = true; // exit retry loop

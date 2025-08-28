@@ -178,7 +178,7 @@ class Activity {
       video: map['video'] ?? "",
       videoTitle: map['videoTitle'] ?? "",
       realVideo: map['realVideo'] ?? "",
-      createdAt: DateTime.parse(map['created_at']),
+      createdAt: DateTime.parse(map['createdAt']),
     );
   }
 
