@@ -5,10 +5,13 @@ import 'database/database.dart';
 import 'package:virtualfundi/services/post_service.dart';
 import 'dart:io';
 import 'package:virtualfundi/services/access_token.dart';
+import 'package:virtualfundi/services/login_session_id.dart';
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseHelper().initializeDatabase();
-
+  await SessionManager.clearCurrentUser();
   runApp(const MyApp());
 }
 

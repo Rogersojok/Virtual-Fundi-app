@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:virtualfundi/screens/signup_screen.dart';
 import '../database/database.dart';
 import 'home_screen.dart';
+import 'package:virtualfundi/services/login_session_id.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -44,6 +45,8 @@ class _SignInScreenState extends State<SignInScreen> {
     // check if the email exists
     if (user?.email != null) {
       if (user?.password == password) {
+        //save login user
+        await SessionManager.saveCurrentUser(user!.email);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Logged in successfully')),
         );

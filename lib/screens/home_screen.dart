@@ -297,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         };
 
         for (var activityJson in activitiesData) {
-          //print(activityJson);
+          print(activityJson);
           final activity = Activity.fromMap(activityJson);
           final onlineActivityTime = DateTime.parse(activityJson['created_at']);
           final localActivityTime = localActivityTimestamps[activity.id];
@@ -366,6 +366,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     while (videoQueue.isNotEmpty) {
       final activity = videoQueue.removeFirst();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${videoQueue.length} videos left")),
+      );
 
       if (activity.realVideo != 'placeholder') {
         int attempt = 0;

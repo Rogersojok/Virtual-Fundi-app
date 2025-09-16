@@ -178,7 +178,7 @@ class Activity {
       video: map['video'] ?? "",
       videoTitle: map['videoTitle'] ?? "",
       realVideo: map['realVideo'] ?? "",
-      createdAt: DateTime.parse(map['createdAt']),
+      createdAt: DateTime.parse(map['created_at']),
     );
   }
 
@@ -244,6 +244,7 @@ class ClassSubject {
       'user_id': userId,
     };
   }
+
   factory ClassSubject.fromMap(Map<String, dynamic> map){
     return ClassSubject(
       id: map['id'],
@@ -253,6 +254,69 @@ class ClassSubject {
 
     );
   }
+}
+
+class SessionFeedback{
+  final int? feedbackId;
+  final String username;
+  final String school;
+  final int rate;
+  final String feedback;
+  final int time;
+  final int femalePresent;
+  final int femaleTotal;
+  final int malePresent;
+  final int maleTotal;
+
+  SessionFeedback({
+    this.feedbackId,
+    required this.username,
+    required this.school,
+    required this.rate,
+    required this.feedback,
+    required this.time,
+    required this.femalePresent,
+    required this.femaleTotal,
+    required this.malePresent,
+    required this.maleTotal,
+  });
+
+  Map<String, dynamic> toMap(){
+    return {
+      'feedbackId': feedbackId,
+      'username': username,
+      'school': school,
+      'rate' : rate,
+      'feedback': feedback,
+      'time': time,
+      'femalePresent': femalePresent,
+      'femaleTotal': femaleTotal,
+      'malePresent': malePresent,
+      'maleTotal': maleTotal,
+    };
+  }
+
+  factory SessionFeedback.fromMap(Map<String, dynamic> map){
+    return SessionFeedback(
+        feedbackId: map['feedbackId'],
+        username: map['username'],
+        school: map['school'],
+        rate: map['rate'],
+        feedback: map['feedback'],
+        time: map['time'],
+        femalePresent: map['femalePresent'],
+        femaleTotal: map['femaleTotal'],
+        malePresent: map['malePresent'],
+        maleTotal: map['maleTotal'],
+
+    );
+  }
+
+  @override
+  String toString() {
+    return 'SessionFeedback{feedbackId: $feedbackId, username: $username, school: $school, rate: $rate, feedback: $feedback, time: $time, femalePresent: $femalePresent, femaleTotal: $femaleTotal, malePresent: $malePresent, maleTotal: $maleTotal}';
+  }
+
 }
 
 class TeacherData {
@@ -406,7 +470,7 @@ class DatabaseHelper {
     WidgetsFlutterBinding.ensureInitialized();
     _database = await openDatabase(
       join(await getDatabasesPath(), 'virtual_Fundi.db'), //virtualFundiDb.db'
-      version: 15, // Increment the version number
+      version: 16, // Increment the version number
       onCreate: (db, version) {
         db.execute(
           'CREATE TABLE topics(id INTEGER PRIMARY KEY, topicName TEXT, topicCode TEXT, term TEXT, cat TEXT, subject TEXT, classTaught TEXT, dateCreated TEXT)',
@@ -427,12 +491,20 @@ class DatabaseHelper {
         db.execute(
           'CREATE TABLE teacherData(teacherId INTEGER PRIMARY KEY AUTOINCREMENT, teacherName TEXT, schoolName TEXT,classStream TEXT,topicCovered TEXT,sessionCovered TEXT,frequency TEXT,easeOfUse TEXT, digitalContentUsefulnes TEXT, prepTimeSaved TEXT, effectivenessOfIntruc TEXT, videoContentRatings TEXT, escVideoHelpfulness TEXT, confidenceInESC TEXT, escVideoPreparation TEXT, overallSatisfaction INTEGER, challenges TEXT, improvements TEXT, additionalComments TEXT, evaluationDate TEXT)',
         );
+        db.execute(
+          'CREATE TABLE sessionFeedback(feedbackId INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, school TEXT,  rate INTEGER DEFAULT "0", feedback TEXT, time INTEGER, femalePresent INTEGER, femaleTotal INTEGER, malePresent INTEGER, maleTotal INTEGER)',
+        );
 
       },
       onUpgrade: (db, oldVersion, newVersion) async {
           if(oldVersion < 15){
             db.execute(
               'CREATE TABLE IF NOT EXISTS teacherData(teacherId INTEGER PRIMARY KEY AUTOINCREMENT, teacherName TEXT, schoolName TEXT,classStream TEXT,topicCovered TEXT,sessionCovered TEXT,frequency TEXT,easeOfUse TEXT, digitalContentUsefulnes TEXT, prepTimeSaved TEXT, effectivenessOfIntruc TEXT, videoContentRatings TEXT, escVideoHelpfulness TEXT, confidenceInESC TEXT, escVideoPreparation TEXT, overallSatisfaction INTEGER, challenges TEXT, improvements TEXT, additionalComments TEXT, evaluationDate TEXT)',
+            );
+          }
+          if(oldVersion < 16){
+            db.execute(
+              'CREATE TABLE sessionFeedback(feedbackId INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, school TEXT,  rate INTEGER DEFAULT "0", feedback TEXT, time INTEGER, femalePresent INTEGER, femaleTotal INTEGER, malePresent INTEGER, maleTotal INTEGER)',
             );
           }
       },
@@ -806,16 +878,23 @@ class DatabaseHelper {
     return maps.map((map) => TeacherData.fromMap(map)).toList();
   }
 
+  // Session Feedback
+  Future<int> insertSessionFeedbackData(SessionFeedback sessionFeedback) async {
+    final db = await _database;
+    return await db!.insert(
+      'sessionFeedback',
+      sessionFeedback.toMap(), // convert sessionFeedback to a map for the database
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
+  }
+
+  Future<List<SessionFeedback>> getAllSessionFeedback() async{
+    final db = await _database;
+    final List<Map<String, dynamic>> maps = await db!.query('sessionFeedback');
+    // convert each map to a Session object
+    return maps.map((map) => SessionFeedback.fromMap(map)).toList();
+  }
+
 }
 
-/// Future<List<Session>> retrieveAllSession(int topicId) async {
-//     final db = await _database;
-//     final List<Map<String, dynamic>> maps = await db!.query(
-//       'sessions',
-//       where: 'topic = ?',
-//       whereArgs: [topicId],
-//     );
-//     // Convert each map to a Session object
-//     return maps.map((map) => Session.fromMap(map)).toList();
-//   }
 

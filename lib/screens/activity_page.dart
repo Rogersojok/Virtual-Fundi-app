@@ -1,22 +1,16 @@
 
 import 'dart:async';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import '../theme/theme.dart';
 import '../widgets/custom_scaffold.dart';
-import 'dart:convert'; // for convert response to json
-import 'package:http/http.dart' as http; // Import http package for making api request.
 import 'package:video_player/video_player.dart';
 import 'package:virtualfundi/widgets/video_player_widget.dart';
-//import 'package :flutter_html/flutter_html.dart';
 import '../database/database.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utills/animateAButton.dart';
-import 'package:disk_space_plus/disk_space_plus.dart';
-import 'package:virtualfundi/services/access_token.dart';
+import 'package:virtualfundi/services/login_session_id.dart';
+
 
 // class for data fetched from the database
 
@@ -35,7 +29,6 @@ class _ActivityPageState extends State<ActivityPage> {
   List<Map<String, dynamic>> activities = [];
   int currentIndex = 0;
   int currentTextIndex = 0;
-  int progressD = 0;
   late VideoPlayerController _controller;
   late String filePath = "";
   List<dynamic> dataVideoD = [];
@@ -55,71 +48,7 @@ class _ActivityPageState extends State<ActivityPage> {
   @override
   void initState() {
     super.initState();
-    //_checkInternetAndFetchData();
-    internet2();
-    //fetchData();
     fetchLocalData();
-    checkDiskSpace();
-  }
-
-  void setActivity(){
-    currentActivity = Activity(
-      id: activities[currentIndex]['id'],
-      title: activities[currentIndex]['title'],
-      session: activities[currentIndex]['session'],
-      teacherActivity: activities[currentIndex]['teacherActivity'],
-      studentActivity: activities[currentIndex]['studentActivity'],
-      mediaType: activities[currentIndex]['mediaType'],
-      time: activities[currentIndex]['time'] ?? 5,
-      notes: activities[currentIndex]['notes'],
-      image: activities[currentIndex]['image'] ?? "",
-      imageTitle: activities[currentIndex]['imageTitle'] ?? "",
-      video: "",
-      videoTitle: activities[currentIndex]['videoTitle'] ?? "",
-      realVideo: 'real_video',
-      createdAt:
-      DateTime.parse(activities[currentIndex]['createdAt']),
-    );
-
-    print('Set current activity:  $currentActivity');
-  }
-
-  void _checkInternetAndFetchData() {
-    streamSubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
-      if(result.contains(ConnectivityResult.mobile) || result.contains(ConnectivityResult.wifi)){
-        network = "Online";
-        print("Online");
-      }else{
-        network = "Offline";
-        print("Offline");
-      }
-    });
-  }
-
-  Future<void> checkDiskSpace() async {
-    try {
-      freeSpace = await DiskSpacePlus.getFreeDiskSpace;
-      if (freeSpace != null) {
-        print('Free disk space: $freeSpace MB');
-      } else {
-        print('Failed to get free disk space');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
-
-  void internet2() async{
-    bool result = await InternetConnection().hasInternetAccess;
-    if(result == true ){
-      network = "Online";
-      print("Online");
-    }else{
-      network = "Offline";
-      print("Offline");
-    }
-    print(result);
   }
 
   String convertToReadableFormat(String text) {
@@ -138,85 +67,20 @@ class _ActivityPageState extends State<ActivityPage> {
     return buffer.toString();
   }
 
-
-  Future<void> fetchData() async {
-    final dbHelper = DatabaseHelper();
-    await dbHelper.initializeDatabase();
-
-    final response = await http.get(Uri.parse(
-        'https://fbappliedscience.com/api/viewActivities/${widget.sessionId}'));
-
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      dataVideoD = data;
-
-      // Convert JSON data to Session objects and insert into the database
-      for (var jsonData in data) {
-        // download video here before inserting in the database.
-
-        final activity = Activity(
-          id: jsonData['id'],
-          title: jsonData['title'],
-          session: jsonData['session'],
-          teacherActivity: jsonData['teacherActivity'],
-          studentActivity: jsonData['studentActivity'],
-          mediaType: jsonData['mediaType'],
-          time: jsonData['time'] ?? 5,
-          notes: jsonData['notes'],
-          image: jsonData['image'] ?? "",
-          imageTitle: jsonData['image_title'] ?? "",
-          video: filePath ?? "",
-          videoTitle: jsonData['video_title'] ?? "",
-          realVideo: jsonData['real_video'],
-          createdAt: DateTime.parse(jsonData['created_at']),
-        );
-        await dbHelper.insertActivity(activity);
-      }
-
-      // Retrieve all topics from the database and print them
-      activitiesD =
-      await dbHelper.retrieveActivitiesBySession(widget.sessionId);
-      setState(() {
-        activities =
-            activitiesD.map((activity) => activity.toMap()).toList();
-        print(activities); // Handle null items in the list
-        setActivity();
-      });
-
-    } else {
-      throw Exception('Failed to load data');
-    }
-  }
-
-
-
   Future<void> fetchLocalData() async {
 
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
     // Retrieve all topics from the database and print them
-    activitiesD =
-      await dbHelper.retrieveActivitiesBySession(widget.sessionId);
-
-    print("""""");
-    print( 'from database $activitiesD'); // Handle null items in the list
-    print("""""");
-
+    activitiesD = await dbHelper.retrieveActivitiesBySession(widget.sessionId);
     setState(() {
-      activities =
-          activitiesD.map((activity) => activity.toMap()).toList();
-      print("""""");
-      print('inside set state $activities'); // Handle null items in the list
-      print("""""");
-      internet2();
-      setActivity();
+      activities = activitiesD.map((activity) => activity.toMap()).toList();
     });
     totalActicities = activities.length;
-    //ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Disk space: $freeSpace')));
   }
 
-
+/*
   Future<String> downloadFile(String fileUrl, Function(int) onProgress) async {
     // retrive access token
     String? token = await getToken(); // Retrieve stored token
@@ -372,7 +236,9 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
+ */
 
+/*
   Future<String> downloadImage(String imageUrl) async {
     var httpClient = http.Client();
     var request = http.Request('GET', Uri.parse(imageUrl));
@@ -395,6 +261,10 @@ class _ActivityPageState extends State<ActivityPage> {
 
     return filePath;
   }
+
+ */
+
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   Widget _buildActivityWidget(Map<String, dynamic> activity) {
     print('currentIndex: $currentIndex');
@@ -707,9 +577,8 @@ class _ActivityPageState extends State<ActivityPage> {
   //##################################################################################
   Widget _buildVideoActivity(Map<String, dynamic> activity) {
     // Convert the map to an Activity instance
-    Activity currentActivity = Activity.fromMap(activity);
 
-    String videoFilePath = currentActivity.video;
+    String videoFilePath = activity['video'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -723,7 +592,7 @@ class _ActivityPageState extends State<ActivityPage> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                currentActivity.videoTitle,
+                activity['videoTitle'],
                 style: TextStyle(
                   fontSize: MediaQuery.of(context).size.width * 0.05,
                   fontWeight: FontWeight.bold,
@@ -811,9 +680,6 @@ class _ActivityPageState extends State<ActivityPage> {
           ),
         );
       }
-      _checkInternetAndFetchData();
-      progressD = 0;
-      setActivity();
     });
   }
 
@@ -827,9 +693,6 @@ class _ActivityPageState extends State<ActivityPage> {
         currentIndex = activities.length - 1; // Wrap around to the last activity
         // to move back to the session details
       }
-      internet2();
-      progressD = 0;
-      setActivity();
     });
   }
 
@@ -839,7 +702,6 @@ class _ActivityPageState extends State<ActivityPage> {
       if (currentTextIndex >= textElementsToSkip.length) {
         nextActivity();
       }
-      internet2();
     });
   }
 
@@ -849,16 +711,10 @@ class _ActivityPageState extends State<ActivityPage> {
       if (currentTextIndex < 0) {
         previousActivity();
       }
-      _checkInternetAndFetchData();
     });
   }
 
-  Widget _buildNavigationButton({
-    required VoidCallback onPressed,
-    required IconData icon,
-    required String label,
-    required bool isEnabled,
-  }) {
+  Widget _buildNavigationButton({required VoidCallback onPressed, required IconData icon, required String label, required bool isEnabled,}) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -1124,9 +980,10 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
     );
   }
 
-  void _submitFeedback() {
+  Future<void> _submitFeedback() async {
     if (_rating > 0) {
       // Here you would typically save the rating and feedback to your database
+
       setState(() {
         _feedbackSubmitted = true;
       });
@@ -1134,7 +991,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Thank you for your feedback!'),
+          content: const Text('We have recorded your feedback Thank you!'),
           backgroundColor: Colors.green.shade600,
           behavior: SnackBarBehavior.floating,
         ),
@@ -1214,7 +1071,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
                     
                     // Girls Section
                     _buildAttendanceSection(
-                      'Girls',
+                      'Female',
                       Icons.female,
                       Colors.pink,
                       _girlsCountController,
@@ -1224,7 +1081,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
                     
                     // Boys Section
                     _buildAttendanceSection(
-                      'Boys',
+                      'Male',
                       Icons.male,
                       Colors.blue,
                       _boysCountController,
@@ -1468,7 +1325,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
       if (girlsPresent > totalGirls) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Girls present cannot exceed total girls'),
+            content: const Text('Female present cannot exceed total Female'),
             backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1479,7 +1336,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
       if (boysPresent > totalBoys) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Boys present cannot exceed total boys'),
+            content: const Text('Male present cannot exceed total Male'),
             backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1502,13 +1359,43 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
       return true;
     }
     
-    void _submitAttendance() {
+    void _submitAttendance() async {
       // Get the attendance data
       int girlsPresent = int.tryParse(_girlsCountController.text) ?? 0;
       int totalGirls = int.tryParse(_totalGirlsController.text) ?? 0;
       int boysPresent = int.tryParse(_boysCountController.text) ?? 0;
       int totalBoys = int.tryParse(_totalBoysController.text) ?? 0;
-     
+
+      // data to be inserted
+      DateTime _time = DateTime.now();
+      // get current user
+      final userEmail = await SessionManager.getCurrentUser();
+
+
+
+      final dbHelper = DatabaseHelper();
+      await dbHelper.initializeDatabase();
+
+      // get user with the provided email
+      final user = await dbHelper.getUser(userEmail!);
+
+
+      final SessionFeedbackData = SessionFeedback(
+        rate: _rating,
+        username: user!.name,
+        school: user.school,
+        feedback: _feedbackController.text,
+        time: _time.millisecondsSinceEpoch,
+        femalePresent: girlsPresent,
+        femaleTotal: totalGirls,
+        malePresent: boysPresent,
+        maleTotal: totalBoys,
+      );
+
+      await dbHelper.insertSessionFeedbackData(SessionFeedbackData);
+
+      final sessionFeedback = await dbHelper.getAllSessionFeedback();
+
      // Here you would typically save the attendance data to your database
      setState(() {
        _attendanceSubmitted = true;
@@ -1518,7 +1405,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
      ScaffoldMessenger.of(context).showSnackBar(
        SnackBar(
          content: Text(
-           'Attendance recorded: Girls $girlsPresent/$totalGirls, Boys $boysPresent/$totalBoys',
+           'Attendance recorded: Female $girlsPresent/$totalGirls, Male $boysPresent/$totalBoys',
          ),
          backgroundColor: Colors.green.shade600,
          behavior: SnackBarBehavior.floating,
@@ -1851,7 +1738,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
                             ),
                             const SizedBox(height: 20),
                             Text(
-                              'How would you rate your learning experience?',
+                              'Rate how helpful the Virtual Fundi was in achieving lesson objectives',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey.shade700,
@@ -1933,7 +1820,7 @@ class _EndOfSessionPageState extends State<EndOfSessionPage> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Would you feel the need to adjust anything?',
+                              'Provide feedback or suggestions you may have',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey.shade700,

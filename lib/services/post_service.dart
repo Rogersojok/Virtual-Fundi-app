@@ -20,6 +20,7 @@ class AppInitializationService {
   void runInitialization(BuildContext context) {
     print('App Initialization code running...');
     showFeedback(context);
+    showSessionFeedback(context);
     // Add any code you want to keep running here
   }
 
@@ -44,18 +45,12 @@ Future<void> showFeedback(BuildContext context) async {
   // Map the feedbacks into a List<Map<String, dynamic>> directly
   feedbackD = feedbacks.map((feedback) => feedback.toMap()).toList();
 
-
-
   // Loop through the feedback and print each one
   for (var f in feedbackD) {
-    print("+++++++++++++++++++++++++++++++++++++++");
     if (ids.contains(f['teacherId'].toString())) {
-      print("data has been sync already");
     }else{
-      print(f);
       sendData(context, f);
     }
-    print("+++++++++++++++++++++++++++++++++++++++");
   }
 }
 
@@ -64,6 +59,7 @@ Future<void> showFeedback(BuildContext context) async {
 Future<void> sendData(BuildContext context, data) async {
   final url = Uri.parse('https://fbappliedscience.com/api/addFeedback'); // Replace with your Django API URL
   String? token = await getToken(); // Retrieve stored token
+  print(token);
 
   try {
     final response = await http.post(
@@ -81,13 +77,13 @@ Future<void> sendData(BuildContext context, data) async {
       print('Data sent successfully: ${response.body}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Done..."),
+          content: Text("Done Sycing feedback"),
           duration: Duration(seconds: 3),
         ),
       );
     } else {
       // Handle failure
-      print('Failed to send data: ${response.statusCode}');
+      print('Failed to send data: ${response.statusCode}, ${response.body}');
     }
   } catch (e) {
     // Handle errors, such as no internet connection
@@ -96,6 +92,69 @@ Future<void> sendData(BuildContext context, data) async {
 }
 
 
-// auto download videos here
+//
+
+Future<void> showSessionFeedback(BuildContext context) async {
+  List<Map<String, dynamic>> SessionfeedbackD = [];
+  List<String> ids = await SharedPrefsHelper.loadSessionFeedbackIds();
+  print("Session Feedback Saved IDs: $ids");
+
+  final dbHelper = DatabaseHelper();
+  await dbHelper.initializeDatabase();
+
+  // Fetch the feedbacks from the database
+  final sessionFeedbacks = await dbHelper.getAllSessionFeedback();
+
+  // Map the feedbacks into a List<Map<String, dynamic>> directly
+  SessionfeedbackD = sessionFeedbacks.map((sessionFeedback) => sessionFeedback.toMap()).toList();
+
+
+  // Loop through the feedback and print each one
+  for (var sessionFeedaback in SessionfeedbackD) {
+    if (ids.contains(sessionFeedaback['feedbackId'].toString())) {
+    }else{
+      final timestamp = sessionFeedaback['time'];
+      DateTime dt = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      sessionFeedaback['time'] = dt.toIso8601String();
+      sendSessionFeedbackData(context, sessionFeedaback);
+    }
+  }
+}
+
+
+Future<void> sendSessionFeedbackData(BuildContext context, data) async {
+  final url = Uri.parse('https://fbappliedscience.com/api/addSessionFeedback'); // Replace with your Django API URL
+  String? token = await getToken(); // Retrieve stored token
+  print(token);
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Token $token', // Add token to request
+        'Content-Type': 'application/json', // Ensure you're sending JSON
+      },
+      body: json.encode(data), // Convert the data to JSON format
+    );
+    if (response.statusCode == 201) {
+      // Success
+      //ids.add(data['teacherId']);
+      await SharedPrefsHelper.sessionFeedbackId(data['feedbackId']);
+      print('Session Feedback Data sent successfully: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Done Syncing session feedback"),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } else {
+      // Handle failure
+      print('Failed to send SessionFeedback data: ${response.statusCode}, ${response.body}');
+    }
+  } catch (e) {
+    // Handle errors, such as no internet connection
+    print('Error occurred: $e');
+  }
+}
 
 

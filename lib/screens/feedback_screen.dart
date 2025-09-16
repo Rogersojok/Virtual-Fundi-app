@@ -329,6 +329,13 @@ class _FeedbackScreenState extends State<FeedbackScreen>
     final dbHelper = DatabaseHelper();
     await dbHelper.initializeDatabase();
 
+    if(_teacherNameController.text.trim().isEmpty || _schoolNameController.text.trim().isEmpty || _classStreamController.text.trim().isEmpty || _topicCoveredController.text.trim().isEmpty || _sessionsCoveredController.text.trim().isEmpty || _challenges.isEmpty || _improvementsController.text.trim().isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("All fields are required")),
+      );
+      return;
+    }
+
     try {
       final teacherData = TeacherData(
         teacherName: _teacherNameController.text.toString(),
